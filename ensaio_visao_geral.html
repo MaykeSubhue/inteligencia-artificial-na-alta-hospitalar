@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ensaio de Validação — LLM Avaliador com PDSQI-9</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b27;
+    --bg3: #1e2535;
+    --border: #2a3347;
+    --border2: #3a4560;
+    --text: #e8eaf0;
+    --text2: #8b93a8;
+    --text3: #5a6378;
+    --blue: #4a9eff;
+    --blue-dim: #1e3a5f;
+    --purple: #9b6dff;
+    --purple-dim: #2d1f5e;
+    --teal: #2dd4a0;
+    --teal-dim: #0d3d2e;
+    --amber: #f5a623;
+    --amber-dim: #3d2a06;
+    --gray: #8b93a8;
+    --gray-dim: #1e2535;
+    --red: #ff6b6b;
+    --red-dim: #3d1a1a;
+    --panel-w: 440px;
+  }
+  body[data-theme="light"] {
+    --bg: #eef2f7;
+    --bg2: #ffffff;
+    --bg3: #f5f7fb;
+    --border: #d4dbe7;
+    --border2: #c8d2e1;
+    --text: #152033;
+    --text2: #516076;
+    --text3: #738198;
+    --blue: #1e63d6;
+    --blue-dim: #e8f0ff;
+    --purple: #6e49d8;
+    --purple-dim: #f0ebff;
+    --teal: #0a8c67;
+    --teal-dim: #e5f7f1;
+    --amber: #c47d16;
+    --amber-dim: #fff3df;
+    --gray: #68788f;
+    --gray-dim: #eef2f7;
+    --red: #d54b4b;
+    --red-dim: #ffe7e7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+  body.panel-active { overflow: hidden; }
+
+  header { padding: 24px 40px 20px; border-bottom: 1px solid var(--border); background: var(--bg2); text-align: center; position: relative; }
+  .header-inner { max-width: 760px; margin: 0 auto; }
+  .back-link { position: absolute; left: 32px; top: 24px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); border-radius: 999px; padding: 10px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .theme-toggle { position: absolute; right: 32px; top: 24px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); border-radius: 999px; padding: 10px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; cursor: pointer; white-space: nowrap; }
+  header .label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text3); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; }
+  header h1 { font-size: 17px; font-weight: 500; color: var(--text); line-height: 1.4; }
+  header p { font-size: 13px; color: var(--text2); margin-top: 4px; font-weight: 300; }
+
+  .hint { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text3); padding: 8px 40px; background: var(--bg); border-bottom: 1px solid var(--border); }
+
+  .workspace { display: flex; flex: 1; overflow: hidden; }
+
+  .diagram-area { flex: 1; overflow-y: auto; padding: 40px 30px; }
+
+  .pipeline { display: flex; flex-direction: column; align-items: center; gap: 0; max-width: 640px; margin: 0 auto; }
+
+  .node { width: 100%; border-radius: 8px; border: 1px solid var(--border); background: var(--bg2); cursor: pointer; transition: all 0.18s ease; min-height: 64px; }
+  .node:hover { border-color: var(--border2); transform: translateX(2px); }
+  .node.active { box-shadow: 0 0 0 1px var(--accent, #4a9eff); }
+  .node-inner { padding: 14px 18px; }
+  .node-header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .phase-tag { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 3px; white-space: nowrap; letter-spacing: 0.05em; }
+  .node-title { font-size: 14px; font-weight: 500; color: var(--text); }
+  .node-sub { font-size: 12px; color: var(--text2); line-height: 1.55; font-weight: 300; }
+
+  .c-gray  { --accent: var(--gray); }
+  .c-blue  { --accent: var(--blue); }
+  .c-purple{ --accent: var(--purple); }
+  .c-teal  { --accent: var(--teal); }
+  .c-amber { --accent: var(--amber); }
+  .c-red   { --accent: var(--red); }
+
+  .c-gray  .phase-tag { background: var(--gray-dim);   color: var(--gray);   border: 1px solid #3a4560; }
+  .c-blue  .phase-tag { background: var(--blue-dim);   color: var(--blue);   border: 1px solid #1e4a8f; }
+  .c-purple.phase-tag,
+  .c-purple .phase-tag{ background: var(--purple-dim); color: var(--purple); border: 1px solid #4a2a9f; }
+  .c-teal  .phase-tag { background: var(--teal-dim);   color: var(--teal);   border: 1px solid #0d5a40; }
+  .c-amber .phase-tag { background: var(--amber-dim);  color: var(--amber);  border: 1px solid #5a3a0a; }
+  .c-red   .phase-tag { background: var(--red-dim);    color: var(--red);    border: 1px solid #5a1a1a; }
+
+  .c-gray:hover   { border-color: var(--gray) !important; }
+  .c-blue:hover   { border-color: var(--blue) !important; }
+  .c-purple:hover { border-color: var(--purple) !important; }
+  .c-teal:hover   { border-color: var(--teal) !important; }
+  .c-amber:hover  { border-color: var(--amber) !important; }
+  .c-red:hover    { border-color: var(--red) !important; }
+
+  .c-gray.active   { border-color: var(--gray) !important;   box-shadow: 0 0 0 1px var(--gray); }
+  .c-blue.active   { border-color: var(--blue) !important;   box-shadow: 0 0 0 1px var(--blue); }
+  .c-purple.active { border-color: var(--purple) !important; box-shadow: 0 0 0 1px var(--purple); }
+  .c-teal.active   { border-color: var(--teal) !important;   box-shadow: 0 0 0 1px var(--teal); }
+  .c-amber.active  { border-color: var(--amber) !important;  box-shadow: 0 0 0 1px var(--amber); }
+  .c-red.active    { border-color: var(--red) !important;    box-shadow: 0 0 0 1px var(--red); }
+
+  .connector { display: flex; justify-content: center; align-items: center; height: 28px; position: relative; }
+  .connector::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--border); transform: translateX(-50%); }
+  .connector span { position: relative; z-index: 1; background: var(--bg); padding: 0 4px; font-size: 13px; color: var(--text3); }
+
+  /* Avaliação paralela */
+  .parallel-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; }
+
+  /* Decisão */
+  .decision-container { width: 100%; }
+  .decision-diamond { border: 1px solid var(--border2); border-radius: 8px; background: var(--bg2); padding: 14px 18px; text-align: center; cursor: pointer; transition: all 0.18s ease; }
+  .decision-diamond:hover { border-color: var(--purple); }
+  .decision-diamond.active { border-color: var(--purple); box-shadow: 0 0 0 1px var(--purple); }
+  .decision-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--purple); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+  .decision-text { font-size: 13px; color: var(--text); font-weight: 500; }
+  .decision-sub { font-size: 11px; color: var(--text2); margin-top: 3px; }
+
+  .branches { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+
+  .branch-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text3); text-align: center; padding: 6px 0 2px; }
+
+  /* Saída */
+  .output-row { display: flex; align-items: flex-start; gap: 10px; width: 100%; }
+
+  /* Panel */
+  .panel { width: var(--panel-w); flex-shrink: 0; background: var(--bg2); border-left: 1px solid var(--border); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s ease; position: fixed; right: 0; top: 0; bottom: 0; z-index: 100; overflow: hidden; box-shadow: -16px 0 32px rgba(0, 0, 0, 0.18); }
+  .panel.open { transform: translateX(0); }
+  .panel-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .panel-header-text { flex: 1; }
+  .panel-phase { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
+  .panel-title { font-size: 16px; font-weight: 500; color: var(--text); line-height: 1.4; }
+  .panel-close { background: none; border: 1px solid var(--border); color: var(--text2); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+  .panel-close:hover { border-color: var(--border2); color: var(--text); }
+  .panel-body { flex: 1; overflow-y: auto; padding: 20px 24px 32px; }
+  .panel-body p { font-size: 13px; color: var(--text2); line-height: 1.75; margin-bottom: 14px; font-weight: 300; }
+  .panel-body h3 { font-size: 11px; font-weight: 500; color: var(--text); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase; margin: 18px 0 8px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+  .panel-body ul { list-style: none; margin-bottom: 14px; }
+  .panel-body ul li { font-size: 13px; color: var(--text2); line-height: 1.65; padding: 3px 0 3px 16px; position: relative; font-weight: 300; }
+  .panel-body ul li::before { content: '—'; position: absolute; left: 0; color: var(--text3); font-size: 11px; }
+  .panel-body .ref { font-size: 11px; color: var(--text3); font-style: italic; border-left: 2px solid var(--border2); padding-left: 10px; margin-top: 14px; line-height: 1.6; }
+  .panel-body table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 12px; display: block; overflow-x: auto; }
+  .panel-body table th { background: var(--bg3); color: var(--text2); padding: 6px 10px; text-align: left; border: 1px solid var(--border); font-weight: 500; white-space: nowrap; }
+  .panel-body table td { padding: 6px 10px; border: 1px solid var(--border); color: var(--text2); font-weight: 300; white-space: nowrap; }
+  .panel-body table tr:nth-child(even) td { background: var(--bg3); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  @media (max-width: 900px) {
+    header { padding: 84px 18px 18px; }
+    .back-link { left: 18px; top: 18px; }
+    .theme-toggle { right: 18px; top: 18px; }
+    .hint { padding-inline: 18px; text-align: center; }
+    .diagram-area { padding: 24px 14px 100px; }
+    .parallel-row, .branches { grid-template-columns: 1fr; }
+    .panel { width: 100vw; border-left: none; }
+    .panel-header { padding: 16px 16px 12px; }
+    .panel-body { padding: 16px 16px 28px; }
+  }
+  @media (max-width: 560px) {
+    header h1 { font-size: 16px; }
+    header p { font-size: 12px; }
+    .theme-toggle, .back-link { font-size: 10px; padding: 9px 12px; }
+    .node-inner, .decision-diamond { padding: 14px; }
+  }
+</style>
+</head>
+<body data-theme="dark">
+
+<header>
+  <a class="back-link" href="index.html" aria-label="Voltar para a página principal">← Voltar</a>
+  <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema">Light Mode</button>
+  <div class="header-inner">
+    <div class="label">Ensaio de validação local · UNAMA / UFPA · 2026</div>
+    <h1>Ensaio de Validação do LLM Avaliador com PDSQI-9</h1>
+    <p>Curadoria de Resumos de Alta Hospitalar — Hospital Municipal · SMS-RJ · Daniel Lopes da Mata</p>
+  </div>
+</header>
+<div class="hint">↗ Clique em qualquer etapa para ver a descrição completa</div>
+
+<div class="workspace">
+<div class="diagram-area" id="diagramArea">
+<div class="pipeline">
+
+  <!-- ENTRADA -->
+  <div class="node c-gray" onclick="openCard('entrada')">
+    <div class="node-inner">
+      <div class="node-header"><span class="phase-tag">Entrada</span><span class="node-title">Planilha de altas — prontuário eletrônico</span></div>
+      <div class="node-sub">Exclusão: &lt;4 dias · &gt;16 dias · óbito · transferência · evasão · campos inválidos</div>
+    </div>
+  </div>
+  <div class="connector"><span>↓</span></div>
+
+  <!-- ESTRATIFICAÇÃO -->
+  <div class="node c-blue" onclick="openCard('estratificacao')">
+    <div class="node-inner">
+      <div class="node-header"><span class="phase-tag">Amostragem</span><span class="node-title">Amostragem aleatória estratificada por tempo de permanência</span></div>
+      <div class="node-sub">Estrato curto: 4–7 dias (n=10) · intermediário: 8–12 dias (n=12) · prolongado: 13–16 dias (n=10) · Total: 32 casos</div>
+    </div>
+  </div>
+  <div class="connector"><span>↓</span></div>
+
+  <!-- DOCUMENTO CONSOLIDADO -->
+  <div class="node c-blue" onclick="openCard('docconsolidado')">
+    <div class="node-inner">
+      <div class="node-header"><span class="phase-tag">Preparação</span><span class="node-title">Montagem do documento consolidado</span></div>
+      <div class="node-sub">Cabeçalho (idade · sexo · tempo · especialidade) + campos normalizados do resumo médico + jornada processada (Trilhas A e B) ao final</div>
+    </div>
+  </div>
+  <div class="connector"><span>↓</span></div>
+
+  <!-- TREINAMENTO -->
+  <div class="node c-amber" onclick="openCard('treinamento')">
+    <div class="node-inner">
+      <div class="node-header"><span class="phase-tag">Treinamento</span><span class="node-title">Treinamento dos avaliadores médicos</span></div>
+      <div class="node-sub">Leitura da rubrica PDSQI-9 em português · 2 casos-piloto supervisionados · discussão até consistência · não incluídos na análise</div>
+    </div>
+  </div>
+  <div class="connector"><span>↓</span></div>
+
+  <!-- AVALIAÇÃO PARALELA -->
+  <div style="width:100%;border:1px dashed var(--border2);border-radius:10px;padding:14px;margin-bottom:0">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;text-align:center;margin-bottom:12px">Avaliação independente e simultânea — sem comunicação entre avaliadores</div>
+    <div class="parallel-row">
+      <div class="node c-blue" onclick="openCard('medico1')">
+        <div class="node-inner">
+          <div class="node-header"><span class="phase-tag">M1</span></div>
+          <div class="node-title" style="font-size:13px;margin-bottom:3px">Médico 1</div>
+          <div class="node-sub">PDSQI-9 · 9 atributos · 32 doc. consolidados · ordem aleatorizada</div>
+        </div>
+      </div>
+      <div class="node c-blue" onclick="openCard('medico2')">
+        <div class="node-inner">
+          <div class="node-header"><span class="phase-tag">M2</span></div>
+          <div class="node-title" style="font-size:13px;margin-bottom:3px">Médico 2</div>
+          <div class="node-sub">PDSQI-9 · 9 atributos · 32 doc. consolidados · ordem aleatorizada</div>
+        </div>
+      </div>
+      <div class="node c-purple" onclick="openCard('llmavaliador')">
+        <div class="node-inner">
+          <div class="node-header"><span class="phase-tag">LLM</span></div>
+          <div class="node-title" style="font-size:13px;margin-bottom:3px">LLM Avaliador</div>
+          <div class="node-sub">GPT-o3-mini · 5-shot · ~22 s/avaliação · sem memória entre sessões</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="connector"><span>↓</span></div>
+
+  <!-- ICC -->
+  <div class="node c-purple" onclick="openCard('icc')">
+    <div class="node-inner">
+      <div class="node-header"><span class="phase-tag">Análise</span><span class="node-title">Cálculo do ICC(3,1)</span></div>
+      <div class="node-sub">Two-way mixed-effects · medidas individuais · consistência · global e por atributo<br>Médicos vs. médicos · mediana médicos vs. LLM Avaliador · IC 95% + F-statistic</div>
+    </div>
+  </div>
+  <div class="connector"><span>↓</span></div>
+
+  <!-- DECISÃO -->
+  <div class="decision-diamond" onclick="openCard('decisao')">
+    <div class="decision-label">Critério de decisão</div>
+    <div class="decision-text">ICC(3,1) mediana médicos vs. LLM Avaliador ≥ 0,70?</div>
+    <div class="decision-sub">Koo e Li (2016) · Shrout e Fleiss (1979)</div>
+  </div>
+  <div class="connector"><span>↓</span></div>
+
+  <!-- RAMOS -->
+  <div class="branches">
+    <div>
+      <div class="branch-label" style="color:var(--teal)">sim — aprovado</div>
+      <div class="node c-teal" onclick="openCard('aprovado')">
+        <div class="node-inner">
+          <div class="node-header"><span class="phase-tag">≥ 0,70</span></div>
+          <div class="node-title" style="font-size:13px;margin-bottom:3px">LLM Avaliador aprovado</div>
+          <div class="node-sub">Adotado para curadoria em escala · monitoramento se 0,70–0,79</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="branch-label" style="color:var(--amber)">não — contingência</div>
+      <div class="node c-amber" onclick="openCard('contingencia')">
+        <div class="node-inner">
+          <div class="node-header"><span class="phase-tag">&lt; 0,70</span></div>
+          <div class="node-title" style="font-size:13px;margin-bottom:3px">Análise diagnóstica</div>
+          <div class="node-sub">ICC por atributo · adoção parcial ou curadoria humana com consenso</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="connector"><span>↓</span></div>
+
+  <!-- SAÍDA -->
+  <div class="node c-gray" onclick="openCard('resultado')">
+    <div class="node-inner">
+      <div class="node-header"><span class="phase-tag">Resultado</span><span class="node-title">Reportado na dissertação como etapa metodológica autônoma</span></div>
+      <div class="node-sub">ICC por atributo · IC 95% · distribuição de pontuações · casos discrepantes · achados sobre PDSQI-9 em contexto brasileiro</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- PANEL -->
+<div class="panel" id="panel">
+  <div class="panel-header">
+    <div class="panel-header-text">
+      <div class="panel-phase" id="panelPhase"></div>
+      <div class="panel-title" id="panelTitle"></div>
+    </div>
+    <button class="panel-close" onclick="closeCard()">✕</button>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+</div>
+</div>
+
+<script>
+const data = {
+  entrada: {
+    phase: 'Entrada', color: '#8b93a8', title: 'Planilha de altas — critérios de exclusão',
+    body: `
+      <p>A planilha de altas extraída do prontuário eletrônico é submetida a quatro etapas sequenciais de exclusão antes da seleção amostral.</p>
+      <h3>Etapa 1 — tempo de permanência</h3>
+      <p>Excluídos episódios com internação inferior a 4 dias ou superior a 16 dias (campo tempo_internacao). O limite inferior elimina internações com volume textual insuficiente para avaliação pelo PDSQI-9. O limite superior evita que o volume extremo de evoluções introduza fator de confusão no teste do instrumento.</p>
+      <h3>Etapa 2 — motivo da alta</h3>
+      <p>Excluídos episódios com alta por óbito, transferência ou evasão (campos diagnostico e conduta). Nesses casos o resumo não cumpre a função de instrumento de transição do cuidado — que é o objeto de estudo.</p>
+      <h3>Etapa 3 — campo em branco</h3>
+      <p>Excluídos episódios com o campo resumo_internacao ausente ou em branco. Sem resumo, não há objeto a avaliar.</p>
+      <h3>Etapa 4 — qualidade mínima do preenchimento</h3>
+      <p>Excluídos resumos com menos de 4 palavras, ou preenchidos com conteúdo vago, ilegível ou inconsistente — como "XXXX", "Em anexo" ou sequências sem sentido clínico.</p>
+      <p class="ref">Campos utilizados: tempo_internacao · diagnostico · conduta · resumo_internacao</p>
+    `
+  },
+  estratificacao: {
+    phase: 'Amostragem', color: '#4a9eff', title: 'Amostragem aleatória estratificada',
+    body: `
+      <p>A amostragem é estratificada por tempo de permanência em vez de aleatória simples, por três razões metodológicas.</p>
+      <h3>Por que estratificar</h3>
+      <ul>
+        <li>O tempo de permanência é o principal determinante do volume textual do prontuário e da complexidade da tarefa de síntese</li>
+        <li>A amostragem aleatória simples poderia concentrar casos na faixa intermediária, mais frequente, comprometendo a representatividade das condições extremas</li>
+        <li>A estratificação garante que o LLM Avaliador seja testado em condições heterogêneas, tornando a conclusão mais robusta e generalizável</li>
+      </ul>
+      <h3>Distribuição dos estratos</h3>
+      <table>
+        <tr><th>Estrato</th><th>Faixa</th><th>n</th><th>Justificativa</th></tr>
+        <tr><td>Curto</td><td>4–7 dias</td><td>10</td><td>Menor densidade informacional</td></tr>
+        <tr><td>Intermediário</td><td>8–12 dias</td><td>12</td><td>Faixa mais frequente na amostra</td></tr>
+        <tr><td>Prolongado</td><td>13–16 dias</td><td>10</td><td>Maior complexidade e volume textual</td></tr>
+      </table>
+      <h3>Justificativa do n=32</h3>
+      <ul>
+        <li>Poder estatístico: ICC entre 0,70 e 0,85 com poder 80% e alfa 0,05 requer 25–40 casos — 32 está no centro da faixa</li>
+        <li>Referência: Croxford et al. (2025) usaram 40 resumos avaliados por 7 médicos — 32 casos × 2 médicos × 9 atributos = 576 pontuações humanas</li>
+        <li>Viabilidade: ~8–10 minutos por resumo = 4–5 horas por avaliador — executável em 1–2 sessões</li>
+      </ul>
+    `
+  },
+  docconsolidado: {
+    phase: 'Preparação', color: '#4a9eff', title: 'Documento consolidado — estrutura e conteúdo',
+    body: `
+      <p>Para cada caso do ensaio é montado um documento consolidado único, que é a entrada entregue a todos os avaliadores — humanos e LLM Avaliador — em formato idêntico.</p>
+      <h3>Estrutura do documento (ordem fixa)</h3>
+      <ul>
+        <li><strong>Cabeçalho:</strong> identificador anônimo · idade · sexo · tempo de permanência · especialidade · CID-10</li>
+        <li><strong>Campos normalizados:</strong> resumo médico extraído e organizado no schema padrão (motivo da internação · diagnósticos · história clínica · tratamentos · exames relevantes · condição na alta · prescrição · plano de seguimento)</li>
+        <li><strong>Jornada processada:</strong> Trilhas A e B ao final, como referência clínica para verificação dos atributos Accurate, Thorough e Cited</li>
+      </ul>
+      <h3>Por que este formato</h3>
+      <ul>
+        <li>Simetria: médicos e LLM Avaliador recebem exatamente o mesmo material</li>
+        <li>Contexto clínico: o cabeçalho permite ao avaliador interpretar atributos como Thorough e Useful considerando o perfil do paciente</li>
+        <li>Rastreabilidade: a jornada processada ao final permite verificar se as informações do resumo são identificáveis na entrada do modelo</li>
+      </ul>
+      <p>Este é o mesmo formato utilizado na fase de curadoria (fase 3) e na avaliação dos resumos gerados (fase 6.2), garantindo consistência metodológica ao longo de todo o estudo.</p>
+    `
+  },
+  treinamento: {
+    phase: 'Treinamento', color: '#f5a623', title: 'Treinamento dos avaliadores médicos',
+    body: `
+      <p>Antes do início das avaliações, os dois médicos participam de sessão de treinamento padronizado para garantir compreensão consistente dos critérios do PDSQI-9.</p>
+      <h3>Etapas do treinamento</h3>
+      <ul>
+        <li>Leitura individual da rubrica PDSQI-9 traduzida para o português</li>
+        <li>Discussão em conjunto dos critérios de cada atributo, com exemplos de pontuação alta e baixa</li>
+        <li>Avaliação supervisionada de 2 casos-piloto não pertencentes à amostra do ensaio</li>
+        <li>Discussão das pontuações dos casos-piloto até demonstração de compreensão consistente dos critérios</li>
+      </ul>
+      <h3>Controle de viés</h3>
+      <ul>
+        <li>As pontuações dos casos-piloto não são incluídas na análise do ensaio</li>
+        <li>Os avaliadores não têm acesso às pontuações uns dos outros durante o processo</li>
+        <li>O LLM Avaliador não participa do treinamento — opera exclusivamente com a rubrica e o documento consolidado</li>
+      </ul>
+      <p class="ref">Adaptação contextual do PDSQI-9: o atributo Cited é reinterpretado como rastreabilidade à jornada processada, dado que a citação formal não é prática da documentação clínica brasileira.</p>
+    `
+  },
+  medico1: {
+    phase: 'Avaliador', color: '#4a9eff', title: 'Médico avaliador 1',
+    body: `
+      <p>O primeiro médico avaliador recebe os 32 documentos consolidados e a rubrica do PDSQI-9, avaliando cada caso de forma independente.</p>
+      <h3>Critérios de elegibilidade</h3>
+      <ul>
+        <li>Graduação em Medicina com CRM ativo</li>
+        <li>Experiência clínica mínima de 2 anos em ambiente hospitalar</li>
+        <li>Familiaridade com o modelo de prontuário eletrônico da unidade</li>
+        <li>Ausência de participação na elaboração dos resumos avaliados</li>
+      </ul>
+      <h3>Procedimento</h3>
+      <ul>
+        <li>Recebe os 32 documentos em ordem aleatorizada individualmente</li>
+        <li>Pontua cada documento nos 9 atributos do PDSQI-9</li>
+        <li>Não tem acesso às pontuações do Médico 2 nem do LLM Avaliador</li>
+        <li>Tempo estimado: 8–10 minutos por resumo · 4–5 horas no total</li>
+      </ul>
+    `
+  },
+  medico2: {
+    phase: 'Avaliador', color: '#4a9eff', title: 'Médico avaliador 2',
+    body: `
+      <p>O segundo médico avaliador segue o mesmo protocolo do Médico 1, com total independência.</p>
+      <h3>Critérios de elegibilidade</h3>
+      <ul>
+        <li>Graduação em Medicina com CRM ativo</li>
+        <li>Experiência clínica mínima de 2 anos em ambiente hospitalar</li>
+        <li>Familiaridade com o modelo de prontuário eletrônico da unidade</li>
+        <li>Ausência de participação na elaboração dos resumos avaliados</li>
+      </ul>
+      <h3>Controle de cegamento</h3>
+      <ul>
+        <li>Os avaliadores do ensaio (Momento 1) devem ser diferentes dos avaliadores da fase 6.3 (Momento 2), ou com intervalo mínimo de 30 dias entre as etapas</li>
+        <li>Ausência de acesso às pontuações anteriores garantida antes do início</li>
+        <li>Cegamento verificado ao final por questionário</li>
+      </ul>
+    `
+  },
+  llmavaliador: {
+    phase: 'LLM Avaliador', color: '#9b6dff', title: 'LLM Avaliador — configuração no ensaio',
+    body: `
+      <p>O LLM Avaliador processa os mesmos 32 documentos consolidados via API, de forma concomitante aos avaliadores humanos.</p>
+      <h3>Configuração</h3>
+      <ul>
+        <li>Modelo: GPT-o3-mini (versão 2025-01-31)</li>
+        <li>Estratégia de prompting: 5-shot</li>
+        <li>Tempo médio por avaliação: ~22 segundos</li>
+        <li>Saída: JSON com uma chave por atributo e valor numérico (Likert 1–5 ou binário para Stigmatizing)</li>
+      </ul>
+      <h3>Operação sem memória</h3>
+      <p>O LLM Avaliador opera sem memória entre sessões — cada avaliação é processada de forma independente via API, sem acesso ao histórico de avaliações anteriores. Isso elimina qualquer risco de contaminação entre casos.</p>
+      <h3>Referência de desempenho esperado</h3>
+      <p>Croxford et al. (2025) demonstraram ICC = 0,818 (IC 95%: 0,772–0,854) para esta configuração em contexto anglófono. O ensaio verifica a transferibilidade para o contexto brasileiro.</p>
+      <p class="ref">CROXFORD, E. et al. Evaluating clinical AI summaries with large language models as judges. npj Digital Medicine, v. 8, n. 640, 2025.</p>
+    `
+  },
+  icc: {
+    phase: 'Análise', color: '#9b6dff', title: 'Cálculo do ICC(3,1)',
+    body: `
+      <p>O ICC(3,1) — two-way mixed-effects, medidas individuais, consistência — é a métrica primária do ensaio. O modelo foi escolhido por quatro razões estruturais do delineamento.</p>
+      <h3>Justificativa do modelo ICC(3,1)</h3>
+      <ul>
+        <li><strong>Two-way:</strong> os mesmos avaliadores avaliam todos os 32 casos</li>
+        <li><strong>Mixed-effects:</strong> avaliadores como efeito fixo (selecionados especificamente); casos como efeito aleatório (amostra da população elegível)</li>
+        <li><strong>Single measures — (3,1):</strong> o LLM Avaliador opera sozinho na prática; ICC(3,k) seria inadequado por pressupor uso da média de múltiplos avaliadores</li>
+        <li><strong>Consistency:</strong> verifica concordância na ordenação relativa, não igualdade dos valores absolutos</li>
+      </ul>
+      <h3>Dois níveis de cálculo</h3>
+      <ul>
+        <li>ICC global — média ponderada dos 9 atributos: critério primário de decisão</li>
+        <li>ICC por atributo — 9 cálculos independentes: diagnóstico em caso de ICC limítrofe</li>
+      </ul>
+      <h3>O que é reportado</h3>
+      <ul>
+        <li>Valor pontual do ICC · IC 95% · F-statistic · p-valor</li>
+        <li>Para as duas comparações: médicos vs. médicos e mediana médicos vs. LLM Avaliador</li>
+        <li>Implementação: Python · biblioteca pingouin · função intraclass_corr · tipo ICC3</li>
+      </ul>
+      <p class="ref">KOO, T. K.; LI, M. Y. Journal of Chiropractic Medicine, v. 15, n. 2, p. 155–163, 2016.<br>SHROUT, P. E.; FLEISS, J. L. Psychological Bulletin, v. 86, n. 2, p. 420–428, 1979.</p>
+    `
+  },
+  decisao: {
+    phase: 'Critério de decisão', color: '#9b6dff', title: 'Limiar ICC ≥ 0,70',
+    body: `
+      <p>O critério primário de decisão é o ICC(3,1) global entre a mediana das pontuações dos dois médicos e as pontuações do LLM Avaliador.</p>
+      <h3>Limiares de interpretação</h3>
+      <table>
+        <tr><th>ICC</th><th>Interpretação</th><th>Decisão</th></tr>
+        <tr><td>≥ 0,90</td><td>Excelente</td><td>LLM Avaliador aprovado</td></tr>
+        <tr><td>0,80 – 0,89</td><td>Boa</td><td>LLM Avaliador aprovado</td></tr>
+        <tr><td>0,70 – 0,79</td><td>Aceitável</td><td>Aprovado com monitoramento</td></tr>
+        <tr><td>0,50 – 0,69</td><td>Moderada</td><td>Contingência humana</td></tr>
+        <tr><td>&lt; 0,50</td><td>Baixa</td><td>Contingência humana</td></tr>
+      </table>
+      <h3>Por que 0,70 como limiar mínimo</h3>
+      <ul>
+        <li>Corresponde ao nível aceitável segundo Koo e Li (2016)</li>
+        <li>Foi adotado no estudo de validação original do PDSQI-9 (Croxford et al., 2025)</li>
+        <li>Garante que o LLM Avaliador seja pelo menos equivalente à concordância humana típica em avaliações clínicas com escala Likert</li>
+      </ul>
+      <p class="ref">KOO, T. K.; LI, M. Y. Journal of Chiropractic Medicine, v. 15, n. 2, p. 155–163, 2016.</p>
+    `
+  },
+  aprovado: {
+    phase: 'Ramo — aprovado', color: '#2dd4a0', title: 'LLM Avaliador aprovado para curadoria',
+    body: `
+      <p>Quando o ICC(3,1) global atinge o critério de aceitação, o LLM Avaliador é adotado para a curadoria dos resumos médicos em escala sobre toda a amostra do estudo.</p>
+      <h3>O que acontece a seguir</h3>
+      <ul>
+        <li>O LLM Avaliador processa todos os resumos médicos da amostra principal</li>
+        <li>Seleciona como ground truth os resumos com PDSQI-9 ≥ 3 em todos os atributos e ≥ 4 em Accurate e Thorough</li>
+        <li>Os resultados do ensaio são reportados como etapa metodológica autônoma na dissertação</li>
+      </ul>
+      <h3>Monitoramento se ICC 0,70–0,79</h3>
+      <p>Se o ICC atingir o limiar mínimo mas ficar na faixa aceitável (0,70–0,79), o LLM Avaliador é aprovado com monitoramento de casos discrepantes — episódios onde a pontuação do LLM difere em mais de 1 ponto da mediana dos médicos são sinalizados para revisão manual.</p>
+    `
+  },
+  contingencia: {
+    phase: 'Ramo — contingência', color: '#f5a623', title: 'Análise diagnóstica e contingência',
+    body: `
+      <p>Quando o ICC(3,1) global fica abaixo de 0,70, antes de acionar a contingência humana realiza-se análise diagnóstica por atributo.</p>
+      <h3>Análise diagnóstica por atributo</h3>
+      <ul>
+        <li>Calcular ICC(3,1) individualmente para cada um dos 9 atributos do PDSQI-9</li>
+        <li>Identificar se o problema é generalizado ou concentrado em atributos específicos</li>
+        <li>Atributos tipicamente problemáticos: Synthesized e Organized — os mais subjetivos (Croxford et al., 2025)</li>
+      </ul>
+      <h3>Possíveis decisões</h3>
+      <ul>
+        <li><strong>Adoção parcial:</strong> se apenas 1–2 atributos têm ICC insuficiente — LLM Avaliador para os atributos confiáveis, avaliação humana para os problemáticos</li>
+        <li><strong>Contingência total:</strong> se o problema é generalizado — curadoria realizada pelos 2 médicos, discordâncias resolvidas por consenso</li>
+      </ul>
+      <h3>Valor metodológico do resultado negativo</h3>
+      <p>Um ICC abaixo do esperado não é falha do estudo — é um achado científico relevante. Documenta um limite de generalização do PDSQI-9 para o contexto brasileiro que o estudo original não testou, e constitui contribuição metodológica independente da dissertação.</p>
+      <p class="ref">CROXFORD, E. et al. npj Digital Medicine, v. 8, n. 640, 2025.</p>
+    `
+  },
+  resultado: {
+    phase: 'Resultado', color: '#8b93a8', title: 'Reportado na dissertação',
+    body: `
+      <p>Independentemente do resultado, os dados completos do ensaio são reportados na seção de resultados da dissertação como etapa metodológica autônoma, anterior à análise comparativa principal.</p>
+      <h3>O que é reportado</h3>
+      <ul>
+        <li>ICC(3,1) global com IC 95%, F-statistic e p-valor — para as duas comparações</li>
+        <li>ICC(3,1) por atributo — tabela com 9 linhas e 2 colunas de comparação</li>
+        <li>Distribuição de pontuações por atributo e por avaliador</li>
+        <li>Análise de casos discrepantes — episódios com maior variabilidade entre avaliadores</li>
+        <li>Discussão sobre o desempenho do PDSQI-9 em contexto brasileiro e em português</li>
+      </ul>
+      <h3>Contribuição científica independente</h3>
+      <p>O ensaio gera evidência inédita sobre a aplicabilidade do PDSQI-9 em português e no contexto do SUS — dado que o instrumento foi validado originalmente em inglês, em cenário ambulatorial norte-americano. Isso é uma contribuição metodológica do estudo, independente do resultado da comparação entre modelos.</p>
+      <p class="ref">CROXFORD, E. et al. Development and validation of the PDSQI-9. JAMIA, v. 32, p. 1050–1060, 2025.</p>
+    `
+  }
+};
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('ensaio-theme');
+
+function applyTheme(theme) {
+  document.body.dataset.theme = theme;
+  themeToggle.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+}
+
+function openCard(key) {
+  const d = data[key];
+  if (!d) return;
+  document.querySelectorAll('.node, .decision-diamond').forEach(n => n.classList.remove('active'));
+  const nodeMap = {
+    entrada: 0, estratificacao: 1, docconsolidado: 2, treinamento: 3,
+    medico1: 4, medico2: 5, llmavaliador: 6, icc: 7, aprovado: 8, contingencia: 9, resultado: 10
+  };
+  const nodes = document.querySelectorAll('.node');
+  if (key === 'decisao') {
+    document.querySelector('.decision-diamond').classList.add('active');
+  } else {
+    const idx = nodeMap[key];
+    if (idx !== undefined && nodes[idx]) nodes[idx].classList.add('active');
+  }
+  document.getElementById('panelPhase').textContent = d.phase;
+  document.getElementById('panelPhase').style.color = d.color;
+  document.getElementById('panelTitle').textContent = d.title;
+  document.getElementById('panelBody').innerHTML = d.body;
+  document.getElementById('panel').classList.add('open');
+  document.body.classList.add('panel-active');
+}
+
+function closeCard() {
+  document.getElementById('panel').classList.remove('open');
+  document.querySelectorAll('.node, .decision-diamond').forEach(n => n.classList.remove('active'));
+  document.body.classList.remove('panel-active');
+}
+themeToggle.addEventListener('click', () => {
+  const nextTheme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(nextTheme);
+  localStorage.setItem('ensaio-theme', nextTheme);
+});
+applyTheme(savedTheme || 'dark');
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCard(); });
+</script>
+</body>
+</html>

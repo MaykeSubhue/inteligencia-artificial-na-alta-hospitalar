@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Framework Metodológico — Automação do Resumo de Alta Hospitalar</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b27;
+    --bg3: #1e2535;
+    --border: #2a3347;
+    --border2: #3a4560;
+    --text: #e8eaf0;
+    --text2: #8b93a8;
+    --text3: #5a6378;
+    --blue: #4a9eff;
+    --blue-dim: #1e3a5f;
+    --purple: #9b6dff;
+    --purple-dim: #2d1f5e;
+    --teal: #2dd4a0;
+    --teal-dim: #0d3d2e;
+    --amber: #f5a623;
+    --amber-dim: #3d2a06;
+    --gray: #8b93a8;
+    --gray-dim: #1e2535;
+    --accent: #4a9eff;
+    --panel-w: 420px;
+  }
+  body[data-theme="light"] {
+    --bg: #eef2f7;
+    --bg2: #ffffff;
+    --bg3: #f5f7fb;
+    --border: #d4dbe7;
+    --border2: #c8d2e1;
+    --text: #152033;
+    --text2: #516076;
+    --text3: #738198;
+    --blue: #1e63d6;
+    --blue-dim: #e8f0ff;
+    --purple: #6e49d8;
+    --purple-dim: #f0ebff;
+    --teal: #0a8c67;
+    --teal-dim: #e5f7f1;
+    --amber: #c47d16;
+    --amber-dim: #fff3df;
+    --gray: #68788f;
+    --gray-dim: #eef2f7;
+    --accent: #1e63d6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  body.panel-active { overflow: hidden; }
+
+  header {
+    padding: 24px 40px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    text-align: center;
+    position: relative;
+  }
+
+  .header-inner {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .back-link {
+    position: absolute;
+    left: 32px;
+    top: 24px;
+    border: 1px solid var(--border);
+    background: var(--bg3);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .theme-toggle {
+    position: absolute;
+    right: 32px;
+    top: 24px;
+    border: 1px solid var(--border);
+    background: var(--bg3);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  header .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  header p {
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 4px;
+    font-weight: 300;
+  }
+
+  .hint {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    padding: 8px 40px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .diagram-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px 30px;
+    transition: padding-right 0.3s ease;
+  }
+
+  .diagram-area.panel-open {
+    padding-right: 30px;
+  }
+
+  /* ── NODES ── */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    max-width: 620px;
+    margin: 0 auto;
+  }
+
+  .node {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    position: relative;
+  }
+
+  .node:hover { border-color: var(--border2); transform: translateX(2px); }
+  .node.active { border-color: var(--accent) !important; box-shadow: 0 0 0 1px var(--accent); }
+
+  .node-inner { padding: 14px 18px; }
+
+  .node-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .phase-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+  }
+
+  .node-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .node-sub {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  /* color variants */
+  .c-gray .phase-tag  { background: var(--gray-dim);   color: var(--gray);   border: 1px solid #3a4560; }
+  .c-blue .phase-tag  { background: var(--blue-dim);   color: var(--blue);   border: 1px solid #1e4a8f; }
+  .c-purple .phase-tag{ background: var(--purple-dim); color: var(--purple); border: 1px solid #4a2a9f; }
+  .c-teal .phase-tag  { background: var(--teal-dim);   color: var(--teal);   border: 1px solid #0d5a40; }
+  .c-amber .phase-tag { background: var(--amber-dim);  color: var(--amber);  border: 1px solid #5a3a0a; }
+
+  .c-gray:hover   { border-color: var(--gray) !important; }
+  .c-blue:hover   { border-color: var(--blue) !important; }
+  .c-purple:hover { border-color: var(--purple) !important; }
+  .c-teal:hover   { border-color: var(--teal) !important; }
+  .c-amber:hover  { border-color: var(--amber) !important; }
+
+  .c-gray.active   { border-color: var(--gray) !important;   box-shadow: 0 0 0 1px var(--gray); }
+  .c-blue.active   { border-color: var(--blue) !important;   box-shadow: 0 0 0 1px var(--blue); }
+  .c-purple.active { border-color: var(--purple) !important; box-shadow: 0 0 0 1px var(--purple); }
+  .c-teal.active   { border-color: var(--teal) !important;   box-shadow: 0 0 0 1px var(--teal); }
+  .c-amber.active  { border-color: var(--amber) !important;  box-shadow: 0 0 0 1px var(--amber); }
+
+  /* connector arrow */
+  .connector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 32px;
+    color: var(--text3);
+    font-size: 16px;
+    position: relative;
+  }
+
+  .connector::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+    transform: translateX(-50%);
+  }
+
+  .connector span {
+    position: relative;
+    z-index: 1;
+    background: var(--bg);
+    padding: 0 4px;
+    font-size: 14px;
+    color: var(--text3);
+  }
+
+  /* fase 3 com ensaio lateral */
+  .fase3-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .ensaio-box {
+    flex-shrink: 0;
+    width: 116px;
+    border-radius: 8px;
+    border: 1px solid var(--amber-dim);
+    background: var(--bg2);
+    padding: 12px 10px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    margin-top: 4px;
+    min-height: 96px;
+  }
+
+  .ensaio-box:hover { border-color: var(--amber); transform: translateX(-2px); }
+  .ensaio-box.active { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
+  .ensaio-box .phase-tag { background: var(--amber-dim); color: var(--amber); border: 1px solid #5a3a0a; margin-bottom: 6px; display: inline-block; }
+  .ensaio-box .node-title { font-size: 12px; color: var(--text); margin-bottom: 3px; }
+  .ensaio-box .node-sub { font-size: 11px; color: var(--text2); }
+
+  .ensaio-arrow {
+    display: flex;
+    align-items: center;
+    padding-top: 28px;
+    color: var(--text3);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  /* fase 6 container */
+  .fase6-container {
+    width: 100%;
+    border: 1px dashed var(--border2);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .fase6-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .fase6-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .fase6-grid .node { width: 100%; }
+
+  .retro-box {
+    border: 1px solid var(--amber-dim);
+    border-radius: 8px;
+    background: var(--bg2);
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    text-align: center;
+    position: relative;
+  }
+
+  .retro-box:hover { border-color: var(--amber); }
+  .retro-box.active { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
+
+  .retro-arrow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-top: 4px;
+  }
+
+  .retro-arrow::before {
+    content: '↩';
+    font-size: 13px;
+    color: var(--amber);
+  }
+
+  /* ── PANEL ── */
+  .panel {
+    width: var(--panel-w);
+    flex-shrink: 0;
+    background: var(--bg2);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 100;
+    overflow: hidden;
+    box-shadow: -16px 0 32px rgba(0, 0, 0, 0.18);
+  }
+
+  .panel.open { transform: translateX(0); }
+
+  .panel-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .panel-header-text { flex: 1; }
+
+  .panel-phase {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .panel-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .panel-close {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .panel-close:hover { border-color: var(--border2); color: var(--text); }
+
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px 32px;
+  }
+
+  .panel-body p {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.75;
+    margin-bottom: 16px;
+    font-weight: 300;
+  }
+
+  .panel-body h3 {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 20px 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .panel-body ul {
+    list-style: none;
+    margin-bottom: 16px;
+  }
+
+  .panel-body ul li {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.65;
+    padding: 4px 0 4px 16px;
+    position: relative;
+    font-weight: 300;
+  }
+
+  .panel-body ul li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--text3);
+    font-size: 11px;
+  }
+
+  .panel-body .tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin: 2px 2px 2px 0;
+  }
+
+  .panel-body .ref {
+    font-size: 11px;
+    color: var(--text3);
+    font-style: italic;
+    border-left: 2px solid var(--border2);
+    padding-left: 10px;
+    margin-top: 16px;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  @media (max-width: 900px) {
+    header { padding: 84px 18px 18px; }
+    .back-link { left: 18px; top: 18px; }
+    .theme-toggle { right: 18px; top: 18px; }
+    .hint { padding-inline: 18px; text-align: center; }
+    .diagram-area { padding: 24px 14px 100px; }
+    .fase3-row { flex-direction: column; align-items: stretch; }
+    .ensaio-box { width: 100%; margin-top: 0; min-height: 0; }
+    .ensaio-arrow { justify-content: center; padding-top: 0; transform: rotate(90deg); }
+    .fase6-grid { grid-template-columns: 1fr; }
+    .panel { width: 100vw; border-left: none; }
+    .panel-header { padding: 16px 16px 12px; }
+    .panel-body { padding: 16px 16px 28px; }
+  }
+  @media (max-width: 560px) {
+    header h1 { font-size: 16px; }
+    header p { font-size: 12px; }
+    .theme-toggle, .back-link { font-size: 10px; padding: 9px 12px; }
+    .node-inner, .retro-box { padding: 14px; }
+  }
+</style>
+</head>
+<body data-theme="dark">
+
+<header>
+  <a class="back-link" href="index.html" aria-label="Voltar para a página principal">← Voltar</a>
+  <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema">Light Mode</button>
+  <div class="header-inner">
+    <div class="label">Dissertação de mestrado · UNAMA / UFPA · 2026</div>
+    <h1>Inteligência Artificial na Alta Hospitalar</h1>
+    <p>Viabilidade Operacional da Automação do Resumo de Alta em Hospital Municipal do Rio de Janeiro · Daniel Lopes da Mata</p>
+  </div>
+</header>
+
+<div class="hint">↗ Clique em qualquer fase para ver a descrição completa</div>
+
+<div class="workspace">
+  <div class="diagram-area" id="diagramArea">
+    <div class="pipeline">
+
+      <!-- FASE 1 -->
+      <div class="node c-gray" onclick="openPanel('f1')">
+        <div class="node-inner">
+          <div class="node-header">
+            <span class="phase-tag">01</span>
+            <span class="node-title">Coleta</span>
+          </div>
+          <div class="node-sub">EHR → evoluções médicas anonimizadas · formato JSON</div>
+        </div>
+      </div>
+
+      <div class="connector"><span>↓</span></div>
+
+      <!-- FASE 2 -->
+      <div class="node c-blue" onclick="openPanel('f2')">
+        <div class="node-inner">
+          <div class="node-header">
+            <span class="phase-tag">02</span>
+            <span class="node-title">Pré-processamento</span>
+          </div>
+          <div class="node-sub">
+            Trilha A — campos estáveis · similaridade semântica dia a dia<br>
+            Trilha B — EM TEMPO · acúmulo cronológico integral<br>
+            Saída: jornada processada (JSON)
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><span>↓</span></div>
+
+      <!-- FASE 3 com ensaio lateral -->
+      <div class="fase3-row">
+        <div class="ensaio-box" onclick="openPanel('ensaio')">
+          <span class="phase-tag">Ensaio</span>
+          <div class="node-title">Validação do<br>LLM Avaliador</div>
+          <div class="node-sub">32 amostras · 2 médicos<br>ICC(3,1) ≥ 0,70</div>
+        </div>
+        <div class="ensaio-arrow">→</div>
+        <div class="node c-purple" style="flex:1" onclick="openPanel('f3')">
+          <div class="node-inner">
+            <div class="node-header">
+              <span class="phase-tag">03</span>
+              <span class="node-title">Curadoria — seleção do ground truth</span>
+            </div>
+            <div class="node-sub">
+              LLM Avaliador aplica PDSQI-9<br>
+              Entrada: jornada processada + resumo médico<br>
+              Critério: todos ≥ 3 · Accurate e Thorough ≥ 4
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><span>↓</span></div>
+
+      <!-- FASE 4 -->
+      <div class="node c-teal" onclick="openPanel('f4')">
+        <div class="node-inner">
+          <div class="node-header">
+            <span class="phase-tag">04</span>
+            <span class="node-title">Geração pelos LLMs</span>
+          </div>
+          <div class="node-sub">
+            GPT-4 · Llama · Gemini<br>
+            Mesmo system prompt · mesmos parâmetros de inferência<br>
+            Saída: 3 resumos gerados por caso
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><span>↓</span></div>
+
+      <!-- FASE 5 -->
+      <div class="node c-blue" onclick="openPanel('f5')">
+        <div class="node-inner">
+          <div class="node-header">
+            <span class="phase-tag">05</span>
+            <span class="node-title">Pós-processamento</span>
+          </div>
+          <div class="node-sub">
+            Normalização em Python (sem IA) · mesmo schema para todos<br>
+            Cabeçalho extraído do resumo médico · aplicado aos 4 documentos<br>
+            Saída: 4 documentos consolidados cegados por caso
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><span>↓</span></div>
+
+      <!-- FASE 6 -->
+      <div class="fase6-container">
+        <div class="fase6-label">06 — Avaliação dos resumos</div>
+        <div class="fase6-grid">
+          <div class="node c-gray" onclick="openPanel('f61')">
+            <div class="node-inner">
+              <div class="node-header">
+                <span class="phase-tag">6.1</span>
+              </div>
+              <div class="node-title" style="font-size:13px;margin-bottom:4px">BERTScore</div>
+              <div class="node-sub">Resumo médico × resumos LLM · F1 por campo · sem cabeçalho</div>
+            </div>
+          </div>
+          <div class="node c-purple" onclick="openPanel('f62')">
+            <div class="node-inner">
+              <div class="node-header">
+                <span class="phase-tag">6.2</span>
+              </div>
+              <div class="node-title" style="font-size:13px;margin-bottom:4px">LLM Avaliador</div>
+              <div class="node-sub">PDSQI-9 · 9 atributos · doc. consolidado + jornada</div>
+            </div>
+          </div>
+          <div class="node c-teal" onclick="openPanel('f63')">
+            <div class="node-inner">
+              <div class="node-header">
+                <span class="phase-tag">6.3</span>
+              </div>
+              <div class="node-title" style="font-size:13px;margin-bottom:4px">Avaliação humana</div>
+              <div class="node-sub">4 docs por caso · Likert 1–5 · preferência + justificativa</div>
+            </div>
+          </div>
+        </div>
+        <div class="retro-box" onclick="openPanel('retro')">
+          <div class="node-header" style="justify-content:center;margin-bottom:2px">
+            <span class="phase-tag" style="background:var(--amber-dim);color:var(--amber);border:1px solid #5a3a0a">Retroalimentação</span>
+          </div>
+          <div class="node-sub" style="text-align:center;font-size:11px">Ajuste de prompt · pré-processamento · fine-tuning condicional (Llama)</div>
+          <div class="retro-arrow" style="justify-content:center">volta para fase 4</div>
+        </div>
+      </div>
+
+      <div class="connector"><span>↓</span></div>
+
+      <!-- FASE 7 -->
+      <div class="node c-teal" onclick="openPanel('f7')">
+        <div class="node-inner">
+          <div class="node-header">
+            <span class="phase-tag">07</span>
+            <span class="node-title">Implementação</span>
+          </div>
+          <div class="node-sub">
+            Resumo validado pelo médico → paciente + APS<br>
+            Compartilhamento estruturado entre níveis do SUS
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PANEL -->
+  <div class="panel" id="panel">
+    <div class="panel-header">
+      <div class="panel-header-text">
+        <div class="panel-phase" id="panelPhase"></div>
+        <div class="panel-title" id="panelTitle"></div>
+      </div>
+      <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
+    <div class="panel-body" id="panelBody"></div>
+  </div>
+</div>
+
+<script>
+const content = {
+  f1: {
+    phase: 'Fase 1',
+    color: '#8b93a8',
+    title: 'Coleta',
+    body: `
+      <p>Extração dos dados clínicos diretamente do banco de dados do prontuário eletrônico institucional (EHR), de forma anonimizada, abrangendo todas as evoluções médicas registradas ao longo da internação. Os dados são coletados e organizados em formato bruto rastreável, preservando a sequência dos eventos assistenciais para processamento posterior.</p>
+      <h3>Fonte de dados</h3>
+      <ul>
+        <li>Prontuário eletrônico institucional (EHR) do hospital municipal</li>
+        <li>Apenas evoluções médicas — enfermagem, fisioterapia e outros profissionais são excluídos</li>
+        <li>Anonimização aplicada antes da extração</li>
+      </ul>
+      <h3>Formato de saída</h3>
+      <ul>
+        <li>JSON estruturado por episódio de internação</li>
+        <li>Cada registro preserva data, hora e campo clínico de origem</li>
+        <li>Rastreabilidade garantida para todas as etapas subsequentes</li>
+      </ul>
+      <p class="ref">Conforme LGPD (Lei nº 13.709/2018) e Resoluções CFM nº 1.821/2007 e nº 2.314/2022.</p>
+    `
+  },
+  f2: {
+    phase: 'Fase 2',
+    color: '#4a9eff',
+    title: 'Pré-processamento',
+    body: `
+      <p>Tratamento do volume textual bruto extraído do prontuário, com limpeza, organização cronológica e compressão iterativa estruturada em duas trilhas paralelas. Ao final, as duas trilhas são combinadas para compor a jornada processada — documento central que alimenta todas as etapas subsequentes.</p>
+      <h3>Trilha A — campos estáveis</h3>
+      <p>Aplica análise de similaridade semântica (BERTScore) entre os registros de dias consecutivos para os campos: HPP, MUC, Alergias, HDA, Imagens, Rotina Laboratório e Ao Exame. Retém apenas o conteúdo clinicamente novo ou alterado, descartando repetições sem valor decisório.</p>
+      <ul>
+        <li>Limiar: F1 ≥ 0,92 → substitui; F1 &lt; 0,92 → preserva o delta</li>
+        <li>Para cada campo, mantém a versão mais relevante por critério específico</li>
+        <li>HDA: maior número de tokens · Imagens e Lab: último laudo/resultado</li>
+      </ul>
+      <h3>Trilha B — EM TEMPO</h3>
+      <p>Preserva integralmente todos os registros de intercorrências clínicas (EM TEMPO), acumulando-os em ordem cronológica sem qualquer filtragem por similaridade. Nenhum evento é descartado.</p>
+      <h3>Saída</h3>
+      <ul>
+        <li>Jornada processada em formato JSON</li>
+        <li>Entrada para: modelos geradores (fase 4), LLM Avaliador (fase 3) e avaliadores humanos (fase 6.3)</li>
+      </ul>
+    `
+  },
+  ensaio: {
+    phase: 'Ensaio de validação',
+    color: '#f5a623',
+    title: 'Validação local do LLM Avaliador',
+    body: `
+      <p>Antes de ser adotado para a curadoria em escala, o LLM Avaliador é calibrado para o contexto de prontuários em português e do sistema público de saúde brasileiro. O ensaio verifica se o modelo apresenta concordância aceitável com avaliadores médicos humanos nesse contexto específico.</p>
+      <h3>Delineamento</h3>
+      <ul>
+        <li>32 resumos estratificados por tempo de permanência: 10 (4–7 dias) + 12 (8–12 dias) + 10 (13–16 dias)</li>
+        <li>2 médicos avaliadores independentes (cegamento)</li>
+        <li>LLM Avaliador: GPT-o3-mini · 5-shot prompting</li>
+        <li>Todos avaliam a mesma tarefa: resumo médico versus jornada processada</li>
+      </ul>
+      <h3>Métrica e critério de aceitação</h3>
+      <ul>
+        <li>ICC(3,1) — two-way mixed-effects · medidas individuais · consistência</li>
+        <li>ICC ≥ 0,70 → LLM Avaliador aprovado para curadoria em escala</li>
+        <li>ICC &lt; 0,70 → contingência: curadoria humana pelos 2 médicos com consenso</li>
+      </ul>
+      <h3>Referência</h3>
+      <p>Croxford et al. (2025) demonstraram ICC = 0,818 (IC 95%: 0,772–0,854) para GPT-o3-mini 5-shot em relação a avaliadores humanos especializados — estudo conduzido em inglês, em cenário ambulatorial norte-americano. O ensaio local verifica a transferibilidade para o contexto brasileiro.</p>
+      <p class="ref">CROXFORD, E. et al. Evaluating clinical AI summaries with large language models as judges. npj Digital Medicine, v. 8, n. 640, 2025.</p>
+    `
+  },
+  f3: {
+    phase: 'Fase 3',
+    color: '#9b6dff',
+    title: 'Curadoria — seleção do ground truth',
+    body: `
+      <p>Avaliação qualitativa dos resumos de alta elaborados pelos médicos assistentes, com o objetivo de selecionar aqueles com qualidade documental suficiente para servir como referência (ground truth) na comparação com os resumos gerados automaticamente.</p>
+      <h3>O que o LLM Avaliador recebe</h3>
+      <ul>
+        <li>Jornada processada (Trilhas A e B) — referência clínica</li>
+        <li>Resumo médico do prontuário — objeto avaliado</li>
+        <li>Rubrica PDSQI-9 em português — instrumento de avaliação</li>
+      </ul>
+      <h3>Critérios de seleção do ground truth</h3>
+      <ul>
+        <li>Pontuação ≥ 3 em todos os 9 atributos do PDSQI-9</li>
+        <li>Pontuação ≥ 4 nos atributos Accurate e Thorough (criticidade para segurança clínica)</li>
+        <li>Presença de diagnóstico principal e pelo menos um secundário</li>
+        <li>Ausência de campos obrigatórios em branco</li>
+      </ul>
+      <h3>Adaptação contextual do PDSQI-9</h3>
+      <p>O atributo Cited é reinterpretado como rastreabilidade: verifica-se se as informações do resumo são identificáveis na jornada processada, independentemente de citação explícita — prática inexistente na documentação clínica brasileira.</p>
+      <p class="ref">CROXFORD, E. et al. Development and validation of the PDSQI-9. JAMIA, v. 32, p. 1050–1060, 2025.</p>
+    `
+  },
+  f4: {
+    phase: 'Fase 4',
+    color: '#2dd4a0',
+    title: 'Geração pelos LLMs',
+    body: `
+      <p>Aplicação de três modelos de linguagem de grande escala como modelos geradores para produção automatizada dos resumos de alta a partir da jornada processada.</p>
+      <h3>Modelos geradores</h3>
+      <ul>
+        <li>GPT-4 (OpenAI) — modelo fechado, acesso via API</li>
+        <li>Llama (Meta) — modelo aberto, acesso via API · fine-tuning condicional previsto</li>
+        <li>Gemini (Google DeepMind) — modelo fechado, acesso via API</li>
+      </ul>
+      <h3>Padronização da comparação</h3>
+      <ul>
+        <li>Mesmo system prompt para os três modelos</li>
+        <li>Mesmos parâmetros de inferência: temperature · top_p · max_tokens · stop_sequences</li>
+        <li>Sem fine-tuning inicial — condições de uso padrão</li>
+        <li>Processamento em lote sobre todos os casos da amostra</li>
+      </ul>
+      <h3>Estrutura do prompt</h3>
+      <ul>
+        <li>System prompt: papel clínico + campos obrigatórios + regras de consolidação</li>
+        <li>User message: jornada processada (JSON)</li>
+        <li>Campos obrigatórios: motivo da internação · diagnósticos · história clínica · tratamentos · exames relevantes · condição na alta · prescrição · plano de seguimento</li>
+      </ul>
+      <h3>Fine-tuning condicional (Llama)</h3>
+      <p>Se o desempenho do Llama nas fases de avaliação for insatisfatório, está prevista uma etapa adicional de fine-tuning supervisionado utilizando os pares jornada processada → ground truth como dados de treinamento.</p>
+    `
+  },
+  f5: {
+    phase: 'Fase 5',
+    color: '#4a9eff',
+    title: 'Pós-processamento',
+    body: `
+      <p>Consolidação e padronização da estrutura de todos os documentos que seguirão para avaliação. Executado integralmente em Python, sem intervenção de modelos de linguagem, por meio de lógica determinística. Nenhum conteúdo é alterado — apenas a estrutura e apresentação são normalizadas.</p>
+      <h3>Extração do cabeçalho</h3>
+      <p>Extraído do resumo médico original e aplicado a todos os 4 documentos normalizados. Contém: idade, sexo, tempo de permanência e especialidade. Garante ao avaliador o contexto clínico necessário para aplicação precisa do PDSQI-9.</p>
+      <h3>Normalização dos resumos LLM</h3>
+      <ul>
+        <li>Extração por marcadores controlados (títulos do system prompt)</li>
+        <li>Campos ausentes → "Informação não disponível"</li>
+        <li>Remoção de formatações inconsistentes (Markdown, asteriscos, negrito)</li>
+        <li>Processamento em lote · Python puro · determinístico</li>
+      </ul>
+      <h3>Normalização do resumo médico</h3>
+      <ul>
+        <li>Extração por dicionário de variantes textuais conhecidas por campo</li>
+        <li>Fallback: texto livre integral com campo registrado como "Estrutura não identificada"</li>
+        <li>Resumos com alta proporção de campos não identificados → candidatos à exclusão na curadoria</li>
+      </ul>
+      <h3>Documento consolidado (saída)</h3>
+      <p>Um documento por caso, com 3 componentes em ordem fixa: cabeçalho + campos clínicos normalizados + jornada processada. Sem marcação de origem — cegamento garantido pela estrutura.</p>
+    `
+  },
+  f61: {
+    phase: 'Fase 6.1',
+    color: '#8b93a8',
+    title: 'BERTScore — Similaridade Semântica',
+    body: `
+      <p>Mensuração automatizada da similaridade semântica entre cada resumo gerado e o resumo médico selecionado como ground truth. Três comparações independentes por caso — uma por modelo gerador.</p>
+      <h3>O que é comparado</h3>
+      <ul>
+        <li>Resumo médico (ground truth) × Resumo GPT-4 → F1</li>
+        <li>Resumo médico (ground truth) × Resumo Llama → F1</li>
+        <li>Resumo médico (ground truth) × Resumo Gemini → F1</li>
+      </ul>
+      <h3>Como a comparação é feita</h3>
+      <ul>
+        <li>Campo a campo — não sobre o documento completo</li>
+        <li>Sem cabeçalho — apenas campos clínicos normalizados</li>
+        <li>Sem jornada processada — esta é referência do PDSQI-9, não do BERTScore</li>
+        <li>Modelo: neuralmind/bert-base-portuguese-cased (PT-BR)</li>
+        <li>Indicadores por campo: Precision semântica · Recall semântico · F1-score</li>
+      </ul>
+      <h3>Campos avaliados</h3>
+      <ul>
+        <li>Motivo da internação · Diagnósticos · História clínica · Tratamentos</li>
+        <li>Exames relevantes · Condição na alta · Prescrição · Plano de seguimento</li>
+      </ul>
+      <h3>Limitações declaradas</h3>
+      <ul>
+        <li>Campos ausentes → registrados como None, não como zero</li>
+        <li>Campo de exames: resumos médicos com dados brutos podem distorcer o F1 desse campo</li>
+        <li>Não captura acurácia factual, completude clínica nem utilidade assistencial</li>
+      </ul>
+      <p class="ref">CROXFORD, E. et al. npj Digital Medicine, v. 8, n. 640, 2025.</p>
+    `
+  },
+  f62: {
+    phase: 'Fase 6.2',
+    color: '#9b6dff',
+    title: 'LLM Avaliador — PDSQI-9 Automatizado',
+    body: `
+      <p>Aplicação do PDSQI-9 pelo LLM Avaliador (validado no ensaio) aos resumos gerados pelos três modelos. Mesmo instrumento da curadoria — objeto diferente.</p>
+      <h3>O que o LLM Avaliador recebe</h3>
+      <ul>
+        <li>Documento consolidado: cabeçalho + campos normalizados do resumo gerado</li>
+        <li>Jornada processada (Trilhas A e B) como referência clínica</li>
+        <li>Sem marcação de origem — avaliação simétrica</li>
+      </ul>
+      <h3>9 atributos do PDSQI-9</h3>
+      <ul>
+        <li>Cited — rastreabilidade à jornada processada (adaptação contextual)</li>
+        <li>Accurate — ausência de alucinações e informações incorretas</li>
+        <li>Thorough — cobertura das informações relevantes da jornada</li>
+        <li>Useful — utilidade para o profissional da APS</li>
+        <li>Organized — estrutura lógica e cronológica</li>
+        <li>Comprehensible — clareza da linguagem técnica</li>
+        <li>Succinct — concisão sem perda de completude</li>
+        <li>Synthesized — integração narrativa coerente</li>
+        <li>Stigmatizing — ausência de linguagem estigmatizante (binário 0/1)</li>
+      </ul>
+      <h3>Diferença em relação à curadoria (fase 3)</h3>
+      <ul>
+        <li>Fase 3: avalia resumo médico → decisão binária (inclui/exclui)</li>
+        <li>Fase 6.2: avalia resumo LLM → pontuação contínua para comparação</li>
+        <li>Sem memória entre sessões — sem risco de contaminação</li>
+        <li>Média de 22 segundos por avaliação via API</li>
+      </ul>
+      <p class="ref">CROXFORD, E. et al. JAMIA, v. 32, p. 1050–1060, 2025.</p>
+    `
+  },
+  f63: {
+    phase: 'Fase 6.3',
+    color: '#2dd4a0',
+    title: 'Avaliação Médica Humana Cega',
+    body: `
+      <p>Avaliação clínica por médicos avaliadores em delineamento cego e aleatorizado. Para cada caso, o avaliador recebe simultaneamente os 4 documentos consolidados — resumo médico e 3 resumos LLM — referentes à mesma jornada processada, sem identificação de origem.</p>
+      <h3>Delineamento</h3>
+      <ul>
+        <li>4 documentos por caso · ordem aleatorizada individualmente</li>
+        <li>Aleatorização elimina viés de posição</li>
+        <li>Mesmo documento consolidado usado pelo LLM Avaliador</li>
+        <li>Cabeçalho presente para contextualização clínica</li>
+      </ul>
+      <h3>Avaliação quantitativa — Likert 1–5</h3>
+      <ul>
+        <li>Qualidade geral — instrumento de continuidade do cuidado</li>
+        <li>Abrangência — cobertura das informações relevantes</li>
+        <li>Concisão — objetividade sem perda de completude</li>
+        <li>Coerência — clareza narrativa e progressão lógica</li>
+      </ul>
+      <h3>Avaliação qualitativa — preferência</h3>
+      <p>O avaliador indica qual documento melhor qualificaria a transição do cuidado para a APS — não a qualidade textual, mas a utilidade assistencial concreta para o próximo nível de cuidado. Registra justificativa clínica livre.</p>
+      <h3>Análise estatística</h3>
+      <ul>
+        <li>ICC(3,1) — concordância entre avaliadores</li>
+        <li>Teste de Wilcoxon pareado · α = 0,05</li>
+        <li>Justificativas: análise de conteúdo temática</li>
+      </ul>
+      <p class="ref">WILLIAMS, C. Y. K. et al. JAMA Internal Medicine, v. 185, n. 7, p. 818–825, 2025.<br>KOVALEVA, M. et al. JMIR AI, v. 4, e72153, 2025.</p>
+    `
+  },
+  retro: {
+    phase: 'Retroalimentação',
+    color: '#f5a623',
+    title: 'Retroalimentação do pipeline',
+    body: `
+      <p>Os resultados combinados das três abordagens de avaliação orientam ajustes iterativos no pipeline. A retroalimentação é prospectiva — orienta a próxima iteração, sem revisão retroativa dos resultados já obtidos.</p>
+      <h3>Nível 1 — ajuste de prompt (fase 4)</h3>
+      <p>BERTScore sistematicamente baixo em um campo específico para todos os modelos indica que o system prompt não está instruindo adequadamente aquele campo. Correção cirúrgica na instrução do campo problemático.</p>
+      <ul>
+        <li>PDSQI-9 baixo em Succinct → prompt induzindo verbosidade</li>
+        <li>PDSQI-9 baixo em Thorough → instrução de completude insuficiente</li>
+      </ul>
+      <h3>Nível 2 — ajuste do pré-processamento (fase 2)</h3>
+      <p>PDSQI-9 baixo em Thorough para campos da Trilha A pode indicar limiar de compressão muito agressivo — conteúdo relevante descartado. Calibração do limiar F1 da Trilha A para o campo problemático.</p>
+      <h3>Nível 3 — fine-tuning condicional (Llama)</h3>
+      <p>Desempenho do Llama consistentemente inferior em múltiplas métricas aciona a etapa adicional de fine-tuning supervisionado. Os pares ground truth (jornada processada → resumo médico selecionado) são os dados de treinamento.</p>
+      <h3>O que a retroalimentação não faz</h3>
+      <ul>
+        <li>Não altera o ground truth já selecionado</li>
+        <li>Não reprocessa casos já avaliados</li>
+        <li>Não modifica o LLM Avaliador após o ensaio de validação</li>
+      </ul>
+    `
+  },
+  f7: {
+    phase: 'Fase 7',
+    color: '#2dd4a0',
+    title: 'Implementação',
+    body: `
+      <p>Etapa de aplicação prática do fluxo validado, prevendo a integração do resumo gerado ao processo de alta hospitalar e sua transmissão estruturada à Atenção Primária à Saúde.</p>
+      <h3>Fluxo de implementação</h3>
+      <ul>
+        <li>Resumo gerado pelo modelo é apresentado ao médico responsável pela alta</li>
+        <li>Médico valida, ajusta se necessário e assina o documento</li>
+        <li>Documento validado é entregue ao paciente na alta</li>
+        <li>Transmissão automática à UBS / APS responsável pelo acompanhamento longitudinal</li>
+      </ul>
+      <h3>Compartilhamento estruturado de dados</h3>
+      <ul>
+        <li>Resultados de exames relevantes compartilhados com a APS</li>
+        <li>Evita duplicidade diagnóstica e repetição desnecessária de exames</li>
+        <li>Fortalece a continuidade do cuidado no âmbito do SUS</li>
+      </ul>
+      <h3>Avaliação futura de impacto</h3>
+      <ul>
+        <li>Taxa de reinternação em 30 dias</li>
+        <li>Repetição de exames já realizados durante a internação</li>
+        <li>Tempo até primeira consulta na APS após a alta</li>
+      </ul>
+      <p class="ref">Alinhado às diretrizes da Rede de Atenção à Saúde (Portaria MS nº 4.279/2010) e ao modelo de contrato de gestão da SMS-RJ.</p>
+    `
+  }
+};
+
+let currentActive = null;
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('ensaio-theme');
+
+function applyTheme(theme) {
+  document.body.dataset.theme = theme;
+  themeToggle.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+}
+
+function openPanel(key) {
+  const data = content[key];
+  if (!data) return;
+
+  document.querySelectorAll('.node, .ensaio-box, .retro-box').forEach(n => n.classList.remove('active'));
+
+  const nodeMap = {
+    f1: 0, f2: 1, f3: 3, f4: 4, f5: 5,
+    f61: 6, f62: 7, f63: 8, f7: 9
+  };
+
+  if (key === 'ensaio') {
+    document.querySelector('.ensaio-box').classList.add('active');
+  } else if (key === 'retro') {
+    document.querySelector('.retro-box').classList.add('active');
+  } else {
+    const nodes = document.querySelectorAll('.node');
+    const idx = nodeMap[key];
+    if (idx !== undefined && nodes[idx]) nodes[idx].classList.add('active');
+  }
+
+  const phaseEl = document.getElementById('panelPhase');
+  const titleEl = document.getElementById('panelTitle');
+  const bodyEl  = document.getElementById('panelBody');
+
+  phaseEl.textContent = data.phase;
+  phaseEl.style.color = data.color;
+  titleEl.textContent = data.title;
+  bodyEl.innerHTML = data.body;
+
+  document.getElementById('panel').classList.add('open');
+  document.body.classList.add('panel-active');
+  currentActive = key;
+}
+
+function closePanel() {
+  document.getElementById('panel').classList.remove('open');
+  document.querySelectorAll('.node, .ensaio-box, .retro-box').forEach(n => n.classList.remove('active'));
+  document.body.classList.remove('panel-active');
+  currentActive = null;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePanel();
+});
+themeToggle.addEventListener('click', () => {
+  const nextTheme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(nextTheme);
+  localStorage.setItem('ensaio-theme', nextTheme);
+});
+applyTheme(savedTheme || 'dark');
+</script>
+</body>
+</html>
