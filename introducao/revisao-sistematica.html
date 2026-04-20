@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revisão Sistemática — LLMs na Alta Hospitalar</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #F8F5EF; --white: #FDFCFA; --ink: #1C1917; --ink2: #44403C; --ink3: #78716C; --rule: #E7E0D6; --shadow: rgba(28,25,23,.08);
+  --c1: #D6E4F0; --c1b: #2563A8; --c1t: #1A3F6E;
+  --c2: #E0D6F0; --c2b: #6B4FBB; --c2t: #3D2475;
+  --c3: #D6EDE4; --c3b: #2A8A62; --c3t: #145538;
+  --c4: #F5E8CC; --c4b: #B86A10; --c4t: #7A4208;
+  --c5: #FCE8E8; --c5b: #C0392B; --c5t: #7B241C;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body[data-theme="dark"] {
+  --cream: #0f1117; --white: #161b27; --ink: #e8eaf0; --ink2: #b4bdd0; --ink3: #7f8aa3; --rule: #2a3347; --shadow: rgba(0,0,0,.24);
+  --c1: #1e3a5f; --c1b: #72b2ff; --c1t: #d7e9ff;
+  --c2: #2d1f5e; --c2b: #b18aff; --c2t: #efe4ff;
+  --c3: #0d3d2e; --c3b: #57d8ad; --c3t: #d8fff0;
+  --c4: #3d2a06; --c4b: #f0b756; --c4t: #ffe7bc;
+  --c5: #3d1a1a; --c5b: #ff8d8d; --c5t: #ffd2d2;
+}
+body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; transition: background .25s, color .25s; }
+
+/* CABEÇALHO */
+.diss-header { position: relative; padding: 28px 140px 24px; border-bottom: 1px solid var(--rule); background: var(--white); display: flex; align-items: center; justify-content: center; gap: 20px; }
+.diss-header-left { display: flex; flex-direction: column; gap: 4px; flex: 1; align-items: center; text-align: center; max-width: 820px; }
+.diss-header-label { font-size: 10px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--c2b); display: flex; align-items: center; gap: 8px; }
+.diss-header-label::before { content: ''; width: 18px; height: 1px; background: var(--c2b); display: inline-block; }
+.diss-header h2 { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 400; color: var(--ink); line-height: 1.3; }
+.diss-header h2 em { font-style: italic; color: var(--c2b); }
+.diss-header-sub { font-size: 12px; font-weight: 300; color: var(--ink3); }
+.header-actions { position: absolute; inset: 28px 48px auto 48px; min-height: 36px; }
+.diss-back-btn, .theme-toggle { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--ink3); text-decoration: none; border: 1px solid var(--rule); background: var(--white); padding: 7px 16px; border-radius: 20px; transition: all 0.18s; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+.diss-back-btn { position: absolute; left: 0; top: 0; }
+.theme-toggle { position: absolute; right: 0; top: 0; }
+.diss-back-btn:hover, .theme-toggle:hover { border-color: var(--c2b); color: var(--c2b); background: color-mix(in srgb, var(--c2b) 10%, var(--white)); }
+
+.hint { padding: 10px 24px; border-bottom: 1px solid var(--rule); font: 500 11px 'DM Sans', sans-serif; color: var(--ink3); text-align: center; background: var(--cream); }
+
+/* HERO */
+.hero { padding: 40px 60px 32px; border-bottom: 1px solid var(--rule); background: var(--white); text-align: center; }
+.hero-label { font-size: 10px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--c1b); display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
+.hero-label::before { content: ''; width: 24px; height: 1px; background: var(--c1b); }
+.hero h1 { font-family: 'Fraunces', serif; font-size: clamp(22px, 3vw, 34px); font-weight: 400; line-height: 1.25; margin-bottom: 8px; }
+.hero h1 em { font-style: italic; color: var(--c1b); }
+.hero-sub { font-size: 13px; font-weight: 300; color: var(--ink3); margin-bottom: 24px; }
+.hero-stats { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+.stat-pill { background: var(--cream); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 18px; text-align: center; }
+.stat-pill .n { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 300; color: var(--c1b); line-height: 1; }
+.stat-pill .label { font-size: 11px; color: var(--ink3); font-weight: 300; margin-top: 3px; }
+
+/* TABS */
+.tabs-bar { background: var(--white); border-bottom: 1px solid var(--rule); padding: 0 60px; display: flex; gap: 0; overflow-x: auto; justify-content: center; }
+.tab-btn { padding: 14px 20px; font-size: 13px; font-weight: 400; color: var(--ink3); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; transition: all 0.18s; font-family: 'DM Sans', sans-serif; }
+.tab-btn:hover { color: var(--ink); }
+.tab-btn.active { color: var(--c1b); border-bottom-color: var(--c1b); font-weight: 500; }
+
+/* MAIN */
+.main { max-width: 1060px; margin: 0 auto; padding: 40px 40px 80px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* SECTION TITLE */
+.sec-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 400; margin-bottom: 6px; }
+.sec-sub { font-size: 13px; color: var(--ink3); font-weight: 300; margin-bottom: 28px; }
+
+/* ── PRISMA ── */
+.prisma-wrap { display: flex; gap: 0; }
+.prisma-phases { display: flex; flex-direction: column; gap: 0; width: 100px; flex-shrink: 0; padding-top: 10px; }
+.prisma-phase { display: flex; align-items: flex-start; padding: 10px 0; position: relative; }
+.prisma-phase-tag { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; writing-mode: horizontal-tb; white-space: nowrap; }
+.prisma-flow { flex: 1; display: flex; flex-direction: column; gap: 0; padding-left: 20px; }
+
+.prisma-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; }
+.prisma-box { border-radius: 8px; border: 1.5px solid; padding: 12px 16px; cursor: pointer; transition: all 0.18s; flex-shrink: 0; text-align: center; }
+.prisma-box:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.prisma-box .bnum { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 300; line-height: 1; }
+.prisma-box .blabel { font-size: 11px; color: var(--ink3); font-weight: 300; margin-top: 2px; }
+.prisma-box .bsub { font-size: 10px; color: var(--ink3); font-weight: 300; margin-top: 1px; }
+.prisma-arrow { font-size: 18px; color: var(--ink3); flex-shrink: 0; }
+.prisma-arrow-down { text-align: center; padding: 2px 0; color: var(--ink3); font-size: 16px; margin-left: 60px; }
+.prisma-excl { border-radius: 8px; border: 1.5px solid var(--c5b); background: var(--c5); padding: 12px 16px; flex: 1; }
+.prisma-excl .etitle { font-size: 12px; font-weight: 500; color: var(--c5t); margin-bottom: 6px; }
+.prisma-excl .eline { font-size: 11px; color: var(--ink3); font-weight: 300; padding: 2px 0; }
+
+.pb-ident  { background: var(--c1); border-color: var(--c1b); min-width: 160px; }
+.pb-triag  { background: #EDF4E0; border-color: var(--c3b); min-width: 160px; }
+.pb-eleg   { background: var(--c4); border-color: var(--c4b); min-width: 160px; }
+.pb-incl   { background: #F0EBF8; border-color: var(--c2b); min-width: 160px; }
+.pb-remov  { background: var(--c5); border-color: var(--c5b); min-width: 160px; }
+
+.phase-ident { background: var(--c1); color: var(--c1t); }
+.phase-triag { background: #EDF4E0; color: var(--c3t); }
+.phase-eleg  { background: var(--c4); color: var(--c4t); }
+.phase-incl  { background: #F0EBF8; color: var(--c2t); }
+.prisma-phase-tag { border-radius: 4px; padding: 6px 10px; font-size: 10px; }
+
+/* ── GRID CARDS ── */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.card { background: var(--white); border: 1.5px solid var(--rule); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s; }
+.card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px var(--shadow); }
+.card-hd { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.card-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.card-year { font-size: 10px; color: var(--ink3); font-weight: 300; margin-left: auto; }
+.card-title { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 400; line-height: 1.35; margin-bottom: 6px; }
+.card-authors { font-size: 11px; color: var(--ink3); font-weight: 300; margin-bottom: 8px; }
+.card-finding { font-size: 12px; color: var(--ink2); font-weight: 300; line-height: 1.55; }
+.card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.tag { font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 20px; }
+.tag-sup { background: var(--c3); color: var(--c3t); }
+.tag-eq  { background: var(--c1); color: var(--c1t); }
+.tag-inf { background: var(--c5); color: var(--c5t); }
+.tag-var { background: var(--c4); color: var(--c4t); }
+.tag-mod { background: #F5F0FF; color: #4A2980; }
+
+/* ── CHARTS ── */
+.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+.chart-box { background: var(--white); border: 1.5px solid var(--rule); border-radius: 12px; padding: 22px; }
+.chart-title { font-size: 13px; font-weight: 500; margin-bottom: 16px; color: var(--ink2); }
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bar-label { font-size: 11px; color: var(--ink3); font-weight: 300; width: 160px; flex-shrink: 0; text-align: right; }
+.bar-track { flex: 1; height: 18px; background: var(--cream); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+.bar-val { font-size: 11px; color: var(--ink3); font-weight: 400; width: 32px; text-align: right; flex-shrink: 0; }
+
+/* ── LACUNAS ── */
+.gap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.gap-card { background: var(--white); border: 1.5px solid var(--rule); border-radius: 12px; padding: 18px; }
+.gap-card.highlight { border-color: var(--c2b); background: #F5F2FD; }
+.gap-icon { font-size: 22px; margin-bottom: 8px; }
+.gap-title { font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--ink); }
+.gap-desc { font-size: 12px; color: var(--ink3); font-weight: 300; line-height: 1.6; }
+.gap-badge { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 20px; margin-top: 8px; background: var(--c2); color: var(--c2t); }
+
+/* ── RELEVÂNCIA ── */
+.rel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.rel-card { background: var(--white); border: 1.5px solid var(--rule); border-radius: 12px; padding: 20px; }
+.rel-num { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 300; color: var(--c2b); line-height: 1; margin-bottom: 8px; }
+.rel-title { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+.rel-desc { font-size: 12px; color: var(--ink3); font-weight: 300; line-height: 1.6; }
+
+/* PANEL */
+.panel { position: fixed; right: 0; top: 0; bottom: 0; width: 420px; background: var(--white); border-left: 1px solid var(--rule); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.28s ease; z-index: 200; }
+.panel.open { transform: translateX(0); }
+.panel-hd { padding: 20px 24px 16px; border-bottom: 1px solid var(--rule); display: flex; align-items: flex-start; justify-content: space-between; }
+.panel-hd-text { flex: 1; }
+.panel-phase-tag { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+.panel-title { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 400; color: var(--ink); line-height: 1.35; }
+.panel-close { background: none; border: 1px solid var(--rule); color: var(--ink3); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.panel-close:hover { border-color: var(--c1b); color: var(--c1b); }
+.panel-body { flex: 1; overflow-y: auto; padding: 20px 24px 32px; }
+.panel-body p { font-size: 13px; color: var(--ink2); line-height: 1.75; margin-bottom: 12px; font-weight: 300; }
+.panel-body h3 { font-size: 11px; font-weight: 500; font-family: 'DM Sans', monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); margin: 16px 0 8px; padding-bottom: 5px; border-bottom: 1px solid var(--rule); }
+.panel-body ul { list-style: none; margin-bottom: 12px; }
+.panel-body ul li { font-size: 13px; color: var(--ink2); padding: 3px 0 3px 14px; position: relative; font-weight: 300; line-height: 1.6; }
+.panel-body ul li::before { content: '—'; position: absolute; left: 0; color: var(--ink3); font-size: 10px; top: 5px; }
+.panel-body .ref { font-size: 11px; color: var(--ink3); font-style: italic; border-left: 2px solid var(--rule); padding-left: 10px; margin-top: 12px; line-height: 1.6; }
+.panel-body table { width: 100%; border-collapse: collapse; margin-bottom: 14px; display: block; overflow-x: auto; }
+.panel-body table th { background: color-mix(in srgb, var(--c2b) 8%, var(--white)); color: var(--ink2); padding: 6px 10px; text-align: left; border: 1px solid var(--rule); font-weight: 500; white-space: nowrap; }
+.panel-body table td { padding: 6px 10px; border: 1px solid var(--rule); color: var(--ink2); white-space: nowrap; }
+
+.tabs-bar::-webkit-scrollbar { display: none; }
+.tabs-bar { scrollbar-width: none; }
+
+::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 2px; }
+@media (max-width: 900px) { .diss-header { padding: 20px 18px; flex-direction: column; } .header-actions { position: static; display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 0; } .diss-back-btn,.theme-toggle { position: static; } .hero { padding: 28px 20px; } .tabs-bar { padding: 0 16px; justify-content: flex-start; } .main { padding: 24px 16px 60px; } .chart-row, .gap-grid, .rel-grid { grid-template-columns: 1fr; } .panel { width: 100vw; border-left: none; } .panel-hd { padding: 16px 16px 12px; } .panel-body { padding: 16px 16px 28px; } }
+@media (max-width: 560px) { .diss-header h2 { font-size: 18px; } .diss-header-sub { font-size: 11px; } .theme-toggle, .diss-back-btn { padding: 8px 12px; font-size: 11px; } .hero-stats { gap: 12px; } .stat-pill { flex: 1 1 calc(50% - 12px); min-width: 132px; } .prisma-row { flex-direction: column; align-items: stretch; } .prisma-arrow { display: none; } .prisma-arrow-down { margin-left: 0; } }
+</style>
+</head>
+<body data-theme="dark">
+
+<!-- CABEÇALHO -->
+<div class="diss-header">
+  <div class="diss-header-left">
+    <span class="diss-header-label">Dissertação · UNAMA / UFPA · 2026</span>
+    <h2>Inteligência Artificial na <em>Alta Hospitalar</em></h2>
+    <span class="diss-header-sub">Daniel Lopes da Mata · Orientadores: Prof. Quites Reis · Profa. Dra. Luciana Ferreira</span>
+  </div>
+  <div class="header-actions">
+    <a class="diss-back-btn" href="./index.html" aria-label="Voltar para a introdução">← Introdução</a>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema">Light Mode</button>
+  </div>
+</div>
+<div class="hint">Clique nas abas e nos blocos para explorar a revisão sistemática no painel lateral</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">Introdução · Revisão Sistemática</div>
+  <h1>LLMs na <em>Geração de Resumos</em> de Alta Hospitalar</h1>
+  <p class="hero-sub">Revisão sistemática conforme PRISMA 2020 · PubMed e Google Scholar · 2020–2026</p>
+  <div class="hero-stats">
+    <div class="stat-pill"><div class="n">128</div><div class="label">Registros identificados</div></div>
+    <div class="stat-pill"><div class="n">44</div><div class="label">Estudos incluídos</div></div>
+    <div class="stat-pill"><div class="n">2023–26</div><div class="label">Período coberto</div></div>
+    <div class="stat-pill"><div class="n">88,6%</div><div class="label">Publicados 2024–25</div></div>
+    <div class="stat-pill"><div class="n">0</div><div class="label">Estudos do Brasil</div></div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="switchTab('prisma',this)">Fluxograma PRISMA</button>
+  <button class="tab-btn" onclick="switchTab('resumos',this)">Resumos de Alta</button>
+  <button class="tab-btn" onclick="switchTab('panorama',this)">Panorama Geral</button>
+  <button class="tab-btn" onclick="switchTab('dados',this)">Dados do Corpus</button>
+  <button class="tab-btn" onclick="switchTab('lacunas',this)">Lacunas</button>
+  <button class="tab-btn" onclick="switchTab('relevancia',this)">Relevância</button>
+</div>
+
+<div class="main">
+
+<!-- ══ PRISMA ══ -->
+<div id="tab-prisma" class="tab-panel active">
+  <div class="sec-title">Fluxograma PRISMA 2020</div>
+  <div class="sec-sub">Processo de identificação, triagem, elegibilidade e inclusão dos estudos · Page et al., BMJ 2021;372:n71</div>
+
+  <div style="display:flex;gap:24px;align-items:flex-start">
+    <!-- fases laterais -->
+    <div style="display:flex;flex-direction:column;gap:0;width:90px;flex-shrink:0;padding-top:10px">
+      <div style="padding:10px 0 60px 0"><span class="prisma-phase-tag phase-ident">Identi­ficação</span></div>
+      <div style="padding:10px 0 64px 0"><span class="prisma-phase-tag phase-triag">Triagem</span></div>
+      <div style="padding:10px 0 52px 0"><span class="prisma-phase-tag phase-eleg">Elegi­bilidade</span></div>
+      <div style="padding:10px 0 0 0"><span class="prisma-phase-tag phase-incl">Inclusão</span></div>
+    </div>
+
+    <!-- fluxo central -->
+    <div style="flex:1">
+
+      <!-- Identificação -->
+      <div class="prisma-row">
+        <div class="prisma-box pb-ident" onclick="openPanel('p-ident')" style="min-width:200px">
+          <div class="bnum" style="color:var(--c1b)">128</div>
+          <div class="blabel">Registros identificados</div>
+          <div class="bsub">PubMed · Google Scholar</div>
+        </div>
+        <div class="prisma-arrow">→</div>
+        <div class="prisma-box pb-remov" onclick="openPanel('p-remov')" style="min-width:180px">
+          <div class="bnum" style="color:var(--c5b)">24</div>
+          <div class="blabel">Duplicatas removidas</div>
+          <div class="bsub">antes da triagem</div>
+        </div>
+      </div>
+
+      <div class="prisma-arrow-down">↓</div>
+
+      <!-- Triagem -->
+      <div class="prisma-row">
+        <div class="prisma-box pb-triag" onclick="openPanel('p-triag')" style="min-width:200px">
+          <div class="bnum" style="color:var(--c3b)">104</div>
+          <div class="blabel">Registros triados</div>
+          <div class="bsub">títulos e resumos</div>
+        </div>
+        <div class="prisma-arrow">→</div>
+        <div class="prisma-excl" onclick="openPanel('p-excl1')" style="cursor:pointer;transition:all 0.18s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+          <div class="etitle">Excluídos (n = 60)</div>
+          <div class="eline">LLM com outro foco (n = 41)</div>
+          <div class="eline">Artigos de revisão (n = 10)</div>
+          <div class="eline">Revisão da internet (n = 5)</div>
+          <div class="eline">Não relacionados ao tema (n = 4)</div>
+        </div>
+      </div>
+
+      <div class="prisma-arrow-down">↓</div>
+
+      <!-- Elegibilidade -->
+      <div class="prisma-row">
+        <div class="prisma-box pb-eleg" onclick="openPanel('p-eleg')" style="min-width:200px">
+          <div class="bnum" style="color:var(--c4b)">44</div>
+          <div class="blabel">Textos completos avaliados</div>
+          <div class="bsub">para elegibilidade</div>
+        </div>
+        <div class="prisma-arrow">→</div>
+        <div class="prisma-excl" style="opacity:0.7">
+          <div class="etitle">Textos completos excluídos</div>
+          <div class="eline">Critérios não atendidos (n = 0)</div>
+          <div class="eline" style="font-style:italic;margin-top:4px">Todos os textos triados foram incluídos</div>
+        </div>
+      </div>
+
+      <div class="prisma-arrow-down">↓</div>
+
+      <!-- Inclusão -->
+      <div class="prisma-row">
+        <div class="prisma-box pb-incl" onclick="openPanel('p-incl')" style="min-width:200px">
+          <div class="bnum" style="color:var(--c2b)">44</div>
+          <div class="blabel">Estudos incluídos</div>
+          <div class="bsub">na revisão sistemática</div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;font-size:11px;color:var(--ink3);font-style:italic">
+        Elaborado conforme Page MJ et al. PRISMA 2020 Statement. BMJ 2021;372:n71.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RESUMOS DE ALTA ══ -->
+<div id="tab-resumos" class="tab-panel">
+  <div class="sec-title">LLMs para Resumos de Alta Hospitalar</div>
+  <div class="sec-sub">9 estudos com comparação direta LLM vs. médico · Eixo 3 da revisão</div>
+  <div class="cards-grid">
+
+    <div class="card" onclick="openPanel('e-williams')">
+      <div class="card-hd"><div class="card-dot" style="background:var(--c3b)"></div><span style="font-size:11px;color:var(--ink3)">Medicina hospitalar</span><span class="card-year">2025</span></div>
+      <div class="card-title">Williams et al. — JAMA Internal Medicine</div>
+      <div class="card-authors">100 internações · 22 avaliadores · UCSF</div>
+      <div class="card-finding">Qualidade equivalente (3,67 vs 3,77; p=0,21). LLM mais conciso e coerente. Mais erros (2,91 vs 1,82) mas baixo potencial de dano.</div>
+      <div class="card-tags"><span class="tag tag-eq">Equivalente</span><span class="tag tag-mod">Referência</span></div>
+    </div>
+
+    <div class="card" onclick="openPanel('e-schoonbeek')">
+      <div class="card-hd"><div class="card-dot" style="background:var(--c3b)"></div><span style="font-size:11px;color:var(--ink3)">8 especialidades</span><span class="card-year">2025</span></div>
+      <div class="card-title">Schoonbeek et al. — BMJ Open</div>
+      <div class="card-authors">50 pacientes · 60 médicos · Hospital holandês</div>
+      <div class="card-finding">57% preferem LLM. Equivalente em completude e correção. 15,7 s vs. 7 min de elaboração. Menos conciso.</div>
+      <div class="card-tags"><span class="tag tag-eq">Equivalente</span></div>
+    </div>
+
+    <div class="card" onclick="openPanel('e-tung')">
+      <div class="card-hd"><div class="card-dot" style="background:var(--c1b)"></div><span style="font-size:11px;color:var(--ink3)">Urologia</span><span class="card-year">2024</span></div>
+      <div class="card-title">Tung et al. — JMIR</div>
+      <div class="card-authors">GPT-4 · Médicos júniors</div>
+      <div class="card-finding">Superior em conteúdo informacional (4,32 vs. 3,70; p=0,03). Nenhuma alucinação identificada.</div>
+      <div class="card-tags"><span class="tag tag-sup">Superior</span></div>
+    </div>
+
+    <div class="card" onclick="openPanel('e-rust')">
+      <div class="card-hd"><div class="card-dot" style="background:var(--c1b)"></div><span style="font-size:11px;color:var(--ink3)">Cardiologia</span><span class="card-year">2025</span></div>
+      <div class="card-title">Rust et al. — Communications Medicine</div>
+      <div class="card-authors">GPT-4o</div>
+      <div class="card-finding">Significativamente mais legível (p&lt;0,0001). 85% correto. 83% inofensivo. Recomendações personalizadas geradas.</div>
+      <div class="card-tags"><span class="tag tag-sup">Superior (legibilidade)</span></div>
+    </div>
+
+    <div class="card" onclick="openPanel('e-schwieger')">
+      <div class="card-hd"><div class="card-dot" style="background:var(--c5b)"></div><span style="font-size:11px;color:var(--ink3)">Psiquiatria</span><span class="card-year">2024</span></div>
+      <div class="card-title">Schwieger et al. — IJMI</div>
+      <div class="card-authors">ChatGPT-4</div>
+      <div class="card-finding">Inferior ao médico (3,12 vs. 3,78; p&lt;0,05). 40% com alucinações — 37,5% clinicamente relevantes.</div>
+      <div class="card-tags"><span class="tag tag-inf">Inferior</span><span class="tag tag-mod">Alto risco</span></div>
+    </div>
+
+    <div class="card" onclick="openPanel('e-bain')">
+      <div class="card-hd"><div class="card-dot" style="background:var(--c5b)"></div><span style="font-size:11px;color:var(--ink3)">Pediatria</span><span class="card-year">2026</span></div>
+      <div class="card-title">Bain et al. — Hospital Pediatrics</div>
+      <div class="card-authors">PDQI-9 · 9 subdomínios</div>
+      <div class="card-finding">Inferior em todos os 9 subdomínios do PDQI-9 (23,7 vs. 27,4; p&lt;0,001).</div>
+      <div class="card-tags"><span class="tag tag-inf">Inferior</span></div>
+    </div>
+
+    <div class="card" onclick="openPanel('e-liw')">
+      <div class="card-hd"><div class="card-dot" style="background:var(--c3b)"></div><span style="font-size:11px;color:var(--ink3)">Geral · Fine-tuning</span><span class="card-year">2026</span></div>
+      <div class="card-title">Li W et al. — Scientific Reports</div>
+      <div class="card-authors">LLM + DoRA</div>
+      <div class="card-finding">BERTScore +6,9%; ROUGE-L +69,6%. Fine-tuning iterativo reduz alucinações progressivamente.</div>
+      <div class="card-tags"><span class="tag tag-sup">Superior (ajustado)</span></div>
+    </div>
+
+    <div class="card" onclick="openPanel('e-hains')">
+      <div class="card-hd"><div class="card-dot" style="background:var(--c4b)"></div><span style="font-size:11px;color:var(--ink3)">Medicina interna</span><span class="card-year">2025</span></div>
+      <div class="card-title">Hains et al. — Internal Medicine Journal</div>
+      <div class="card-authors">Llama3 · Dados reais de EHR</div>
+      <div class="card-finding">Pontuação 19,1/31 na rubrica de Savvopoulos. Viável para dados reais de prontuário.</div>
+      <div class="card-tags"><span class="tag tag-var">Moderado</span></div>
+    </div>
+
+    <div class="card" onclick="openPanel('e-han')">
+      <div class="card-hd"><div class="card-dot" style="background:var(--c4b)"></div><span style="font-size:11px;color:var(--ink3)">UTI Pediátrica Cardíaca</span><span class="card-year">2026</span></div>
+      <div class="card-title">Han et al. — JMIR AI</div>
+      <div class="card-authors">GPT-4o mini · Dupla perspectiva</div>
+      <div class="card-finding">Discrepância significativa entre avaliação de médicos e pais. Necessidade de perspectiva bidimensional.</div>
+      <div class="card-tags"><span class="tag tag-var">Variável</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ PANORAMA ══ -->
+<div id="tab-panorama" class="tab-panel">
+  <div class="sec-title">Panorama Geral — Eixos 1 e 2</div>
+  <div class="sec-sub">Benchmarking, otimização de modelos e documentação clínica assistida</div>
+
+  <div style="margin-bottom:28px">
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px;color:var(--ink2)">Principais achados por técnica de otimização</div>
+    <div class="cards-grid">
+      <div class="card" onclick="openPanel('t-cot')">
+        <div class="card-hd"><div class="card-dot" style="background:var(--c1b)"></div><span style="font-size:11px;color:var(--ink3)">Técnica</span></div>
+        <div class="card-title">Prompt Engineering / CoT</div>
+        <div class="card-finding">Prompts estruturados com Chain-of-Thought superam one-shot e fine-tuning em tarefas específicas. Zhang X et al. (2024), Chung et al. (2024).</div>
+      </div>
+      <div class="card" onclick="openPanel('t-rag')">
+        <div class="card-hd"><div class="card-dot" style="background:var(--c2b)"></div><span style="font-size:11px;color:var(--ink3)">Técnica</span></div>
+        <div class="card-title">RAG — Retrieval-Augmented Generation</div>
+        <div class="card-finding">RAG com corpus biomédico melhora desempenho em 7,2–14,81%. Jeong et al. (2024), Gu et al. (2025), Liu et al. (2025).</div>
+      </div>
+      <div class="card" onclick="openPanel('t-ft')">
+        <div class="card-hd"><div class="card-dot" style="background:var(--c3b)"></div><span style="font-size:11px;color:var(--ink3)">Técnica</span></div>
+        <div class="card-title">Fine-tuning com dados de domínio</div>
+        <div class="card-finding">Fine-tuning nivela modelos open-source a modelos proprietários. Li W et al. (2026), Harel-Canada et al. (2025), Zhang G et al. (2024).</div>
+      </div>
+      <div class="card" onclick="openPanel('t-cert')">
+        <div class="card-hd"><div class="card-dot" style="background:var(--c4b)"></div><span style="font-size:11px;color:var(--ink3)">Técnica</span></div>
+        <div class="card-title">CeRTS — Estimação de Incerteza</div>
+        <div class="card-finding">Supera Sample Consistency. Custo médio de 1,9 execuções vs. 15 do SC. Schimmelpfennig et al. (2025).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DADOS ══ -->
+<div id="tab-dados" class="tab-panel">
+  <div class="sec-title">Caracterização do Corpus</div>
+  <div class="sec-sub">44 estudos · 2023–2026 · distribuição geográfica, temporal e por modelo</div>
+
+  <div class="chart-row">
+    <div class="chart-box">
+      <div class="chart-title">Distribuição por ano de publicação</div>
+      <div class="bar-row"><div class="bar-label">2023</div><div class="bar-track"><div class="bar-fill" style="width:2.3%;background:var(--c1b)"></div></div><div class="bar-val">1</div></div>
+      <div class="bar-row"><div class="bar-label">2024</div><div class="bar-track"><div class="bar-fill" style="width:36.4%;background:var(--c1b)"></div></div><div class="bar-val">16</div></div>
+      <div class="bar-row"><div class="bar-label">2025</div><div class="bar-track"><div class="bar-fill" style="width:52.3%;background:var(--c2b)"></div></div><div class="bar-val">23</div></div>
+      <div class="bar-row"><div class="bar-label">2026</div><div class="bar-track"><div class="bar-fill" style="width:9.1%;background:var(--c3b)"></div></div><div class="bar-val">4</div></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Distribuição geográfica</div>
+      <div class="bar-row"><div class="bar-label">Estados Unidos</div><div class="bar-track"><div class="bar-fill" style="width:54.5%;background:var(--c1b)"></div></div><div class="bar-val">24</div></div>
+      <div class="bar-row"><div class="bar-label">Europa</div><div class="bar-track"><div class="bar-fill" style="width:20.5%;background:var(--c2b)"></div></div><div class="bar-val">9</div></div>
+      <div class="bar-row"><div class="bar-label">Ásia / Oceania</div><div class="bar-track"><div class="bar-fill" style="width:15.9%;background:var(--c3b)"></div></div><div class="bar-val">7</div></div>
+      <div class="bar-row"><div class="bar-label">Canadá</div><div class="bar-track"><div class="bar-fill" style="width:4.5%;background:var(--c4b)"></div></div><div class="bar-val">2</div></div>
+      <div class="bar-row"><div class="bar-label" style="color:var(--c5b);font-weight:500">Brasil / Am. Latina</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--c5b)"></div></div><div class="bar-val" style="color:var(--c5b)">0</div></div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-box">
+      <div class="chart-title">Modelos mais utilizados</div>
+      <div class="bar-row"><div class="bar-label">GPT-4 / 4o / Turbo</div><div class="bar-track"><div class="bar-fill" style="width:63.6%;background:var(--c1b)"></div></div><div class="bar-val">28</div></div>
+      <div class="bar-row"><div class="bar-label">GPT-3.5 / ChatGPT</div><div class="bar-track"><div class="bar-fill" style="width:31.8%;background:var(--c1b)"></div></div><div class="bar-val">14</div></div>
+      <div class="bar-row"><div class="bar-label">Llama / Llama2 / 3</div><div class="bar-track"><div class="bar-fill" style="width:27.3%;background:var(--c3b)"></div></div><div class="bar-val">12</div></div>
+      <div class="bar-row"><div class="bar-label">Gemini / Bard</div><div class="bar-track"><div class="bar-fill" style="width:18.2%;background:var(--c4b)"></div></div><div class="bar-val">8</div></div>
+      <div class="bar-row"><div class="bar-label">Especializados clínicos</div><div class="bar-track"><div class="bar-fill" style="width:13.6%;background:var(--c2b)"></div></div><div class="bar-val">6</div></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Métodos de avaliação</div>
+      <div class="bar-row"><div class="bar-label">Avaliação humana</div><div class="bar-track"><div class="bar-fill" style="width:50%;background:var(--c2b)"></div></div><div class="bar-val">22</div></div>
+      <div class="bar-row"><div class="bar-label">Padrão ouro humano</div><div class="bar-track"><div class="bar-fill" style="width:45.5%;background:var(--c1b)"></div></div><div class="bar-val">20</div></div>
+      <div class="bar-row"><div class="bar-label">Métricas automáticas</div><div class="bar-track"><div class="bar-fill" style="width:40.9%;background:var(--c3b)"></div></div><div class="bar-val">18</div></div>
+      <div class="bar-row"><div class="bar-label">F1 / AUC / Acurácia</div><div class="bar-track"><div class="bar-fill" style="width:36.4%;background:var(--c4b)"></div></div><div class="bar-val">16</div></div>
+      <div class="bar-row"><div class="bar-label">LLM-as-a-Judge</div><div class="bar-track"><div class="bar-fill" style="width:6.8%;background:var(--c5b)"></div></div><div class="bar-val">3</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LACUNAS ══ -->
+<div id="tab-lacunas" class="tab-panel">
+  <div class="sec-title">Lacunas de Conhecimento</div>
+  <div class="sec-sub">6 lacunas identificadas · 2 completamente ausentes do corpus</div>
+  <div class="gap-grid">
+    <div class="gap-card highlight">
+      <div class="gap-icon">🏥</div>
+      <div class="gap-title">Transição do cuidado entre níveis de atenção</div>
+      <div class="gap-desc">Nenhum dos 44 estudos abordou o resumo de alta como instrumento formal de comunicação entre hospital e APS. A literatura trata o resumo como produto final da internação, não como vetor de comunicação clínica em sistemas hierarquizados como o SUS.</div>
+      <span class="gap-badge">Completamente ausente</span>
+    </div>
+    <div class="gap-card highlight">
+      <div class="gap-icon">🌎</div>
+      <div class="gap-title">Sistemas de saúde pública de países de renda média</div>
+      <div class="gap-desc">Zero estudos originários do Brasil ou América Latina. Nenhum estudo avaliou LLMs em contexto hospitalar público de grande porte com emergência aberta e diversidade de especialidades equivalente ao SUS.</div>
+      <span class="gap-badge">Completamente ausente</span>
+    </div>
+    <div class="gap-card">
+      <div class="gap-icon">📊</div>
+      <div class="gap-title">Desfechos clínicos reais</div>
+      <div class="gap-desc">A maioria dos estudos avalia qualidade textual. Nenhum mensurou impacto em reinternação, eventos adversos ou satisfação do paciente após a implementação.</div>
+    </div>
+    <div class="gap-card">
+      <div class="gap-icon">🔬</div>
+      <div class="gap-title">LLMs em língua portuguesa</div>
+      <div class="gap-desc">Nenhum estudo em português identificado no corpus. A maioria dos modelos e instrumentos de avaliação foram desenvolvidos e validados exclusivamente para o inglês.</div>
+    </div>
+    <div class="gap-card">
+      <div class="gap-icon">👶</div>
+      <div class="gap-title">Especialidades sub-representadas</div>
+      <div class="gap-desc">Pediatria, psiquiatria e medicina de emergência têm poucos estudos. O corpus é predominantemente de medicina hospitalar geral adulta nos EUA.</div>
+    </div>
+    <div class="gap-card">
+      <div class="gap-icon">🧪</div>
+      <div class="gap-title">Exames como anexo estruturado</div>
+      <div class="gap-desc">Nenhum estudo avaliou a inclusão sistemática de resultados de exames complementares como anexo ao documento de alta — prática com potencial para reduzir exames duplicados e custos no nível receptor.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RELEVÂNCIA ══ -->
+<div id="tab-relevancia" class="tab-panel">
+  <div class="sec-title">Relevância para o Estudo Proposto</div>
+  <div class="sec-sub">4 dimensões de contribuição original · Hospital Municipal · SMS-RJ · 2026</div>
+  <div class="rel-grid">
+    <div class="rel-card">
+      <div class="rel-num">01</div>
+      <div class="rel-title">Contexto geográfico e institucional inédito</div>
+      <div class="rel-desc">Nenhum dos 44 estudos foi conduzido em hospital público brasileiro ou em sistema de saúde de características similares ao SUS. O estudo piloto envolveu 1.234 altas reais em janeiro de 2026.</div>
+    </div>
+    <div class="rel-card">
+      <div class="rel-num">02</div>
+      <div class="rel-title">Pipeline de processamento documentado</div>
+      <div class="rel-desc">Abordagem de limpeza, filtragem por relevância clínica e organização cronológica das evoluções com redução média de 65% do volume textual — metodologicamente original e reprodutível.</div>
+    </div>
+    <div class="rel-card" style="border-color:var(--c2b);background:#F5F2FD">
+      <div class="rel-num" style="color:var(--c2b)">03</div>
+      <div class="rel-title">Resumo de alta como instrumento de transição</div>
+      <div class="rel-desc">Abordagem inédita — nenhum dos 44 estudos posicionou o resumo de alta como vetor de comunicação clínica entre hospital e APS em sistema hierarquizado por níveis de complexidade.</div>
+    </div>
+    <div class="rel-card" style="border-color:var(--c2b);background:#F5F2FD">
+      <div class="rel-num" style="color:var(--c2b)">04</div>
+      <div class="rel-title">Exames complementares como anexo estruturado</div>
+      <div class="rel-desc">Inclusão dos principais exames da internação como anexo ao resumo de alta — potencial impacto em redução de custos, atrasos no tratamento e segurança do paciente. Não investigado por nenhum estudo.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- PANEL -->
+<div class="panel" id="panel">
+  <div class="panel-hd">
+    <div class="panel-hd-text">
+      <div class="panel-phase-tag" id="panelPhase"></div>
+      <div class="panel-title" id="panelTitle"></div>
+    </div>
+    <button class="panel-close" onclick="closePanel()">✕</button>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+</div>
+
+<script>
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+const panels = {
+  'p-ident': { phase: 'Identificação', color: '#2563A8', title: 'Registros identificados (n = 128)',
+    body: `<p>128 registros identificados nas bases de dados PubMed e Google Scholar, utilizando a estratégia de busca:</p><p style="font-family:monospace;font-size:12px;background:#F5F5F5;padding:10px;border-radius:6px;line-height:1.6">("large language model") AND ("discharge summary" OR "clinical summary" OR "transition of care")</p><h3>Parâmetros da busca</h3><ul><li>Período: 2020–2026</li><li>Idioma: inglês</li><li>Tipos de documento: artigos originais, estudos de avaliação, estudos de caso</li></ul>` },
+  'p-remov': { phase: 'Identificação', color: '#C0392B', title: 'Duplicatas removidas (n = 24)',
+    body: `<p>24 registros identificados como duplicatas entre as duas bases de dados foram removidos antes da triagem, restando 104 registros únicos para análise de títulos e resumos.</p>` },
+  'p-triag': { phase: 'Triagem', color: '#2A8A62', title: 'Registros triados (n = 104)',
+    body: `<p>104 registros foram triados por títulos e resumos. 60 foram excluídos com as seguintes justificativas:</p><h3>Motivos de exclusão (n = 60)</h3><ul><li>LLM com outro foco clínico — não relacionado à geração de resumos (n = 41)</li><li>Artigos de revisão — não incluídos por critério de desenho (n = 10)</li><li>Revisão da internet — fontes não acadêmicas (n = 5)</li><li>Não relacionados ao tema — fora do escopo da revisão (n = 4)</li></ul>` },
+  'p-excl1': { phase: 'Triagem', color: '#C0392B', title: 'Excluídos na triagem (n = 60)',
+    body: `<p>A maioria das exclusões (n = 41) ocorreu por estudos que utilizavam LLMs para aplicações clínicas diversas não relacionadas à geração ou avaliação de resumos documentais — como diagnóstico diferencial, triagem, detecção de substâncias e benchmarking em exames médicos.</p>` },
+  'p-eleg': { phase: 'Elegibilidade', color: '#B86A10', title: 'Textos completos avaliados (n = 44)',
+    body: `<p>44 textos completos foram avaliados para elegibilidade. Nenhum foi excluído nesta etapa — todos os estudos triados atenderam aos critérios de inclusão após leitura completa.</p><h3>Critérios de inclusão</h3><ul><li>Uso de LLM para geração, avaliação ou sumarização de documentos clínicos</li><li>Relação com prontuário eletrônico ou documentação hospitalar</li><li>Publicação em periódico científico revisado por pares</li><li>Disponibilidade do texto completo</li></ul>` },
+  'p-incl': { phase: 'Inclusão', color: '#6B4FBB', title: 'Estudos incluídos (n = 44)',
+    body: `<p>44 estudos compõem o corpus final da revisão sistemática, publicados entre 2023 e 2026, com concentração de 88,6% em 2024–2025 — evidência do caráter emergente do campo.</p><h3>Distribuição temática</h3><ul><li>Geração/avaliação de resumos de alta: 14 estudos (31,8%)</li><li>Sumarização clínica geral: 10 estudos (22,7%)</li><li>Benchmarking e avaliação de desempenho: 7 estudos (15,9%)</li><li>Extração e classificação clínica: 6 estudos (13,6%)</li><li>Documentação assistida: 4 estudos (9,1%)</li><li>Aplicações diversas: 3 estudos (6,8%)</li></ul>` },
+  'e-williams': { phase: 'Resumo de Alta', color: '#2A8A62', title: 'Williams et al. (2025) — JAMA Internal Medicine',
+    body: `<p>Estudo de referência para a metodologia desta dissertação. Comparação cega de 100 resumos médicos vs. LLM em internações de 3–6 dias na UCSF, avaliados por 22 médicos.</p><h3>Resultados principais</h3><ul><li>Qualidade geral equivalente: 3,67 vs. 3,77 (p=0,21)</li><li>LLM mais conciso (4,01 vs. 3,70; p&lt;0,001) e coerente (4,16 vs. 4,01; p=0,02)</li><li>LLM menos abrangente (3,72 vs. 4,13; p&lt;0,001)</li><li>LLM com mais erros (2,91 vs. 1,82) mas baixo potencial de dano (&lt;1 na escala 0–7)</li><li>Preferência equivalente entre os dois tipos de resumo</li></ul><p class="ref">WILLIAMS, C. Y. K. et al. JAMA Internal Medicine, v. 185, n. 7, p. 818–825, 2025.</p>` },
+  'e-schoonbeek': { phase: 'Resumo de Alta', color: '#2A8A62', title: 'Schoonbeek et al. (2025) — BMJ Open',
+    body: `<p>Estudo de não-inferioridade em ambiente não anglófono (holandês), integrando LLM ao PEP institucional. 60 médicos de 8 departamentos.</p><h3>Resultados principais</h3><ul><li>Escores globais similares: 3,4 vs. 3,3 (p=0,373)</li><li>57% dos avaliadores preferem LLM</li><li>LLM menos conciso (3,0 vs. 3,5; p=0,001)</li><li>Tempo: 15,7 s (LLM) vs. 7 min (médico)</li><li>ICC interobservadores: 0,975 — excelente confiabilidade</li></ul><p class="ref">SCHOONBEEK, R. C. et al. BMJ Open, v. 15, n. 9, p. e099301, 2025.</p>` },
+  'e-tung': { phase: 'Resumo de Alta', color: '#2563A8', title: 'Tung et al. (2024) — JMIR',
+    body: `<p>Comparação de cartas de alta elaboradas por GPT-4 e médicos júniors em urologia.</p><h3>Resultados principais</h3><ul><li>GPT-4 superior em conteúdo informacional: 4,32 vs. 3,70 (p=0,03)</li><li>Nenhuma alucinação identificada nos resumos LLM</li><li>Médicos júniors apresentaram mais omissões de informações clínicas relevantes</li></ul><p class="ref">TUNG, J. Y. M. et al. JMIR, v. 26, p. e57721, 2024.</p>` },
+  'e-rust': { phase: 'Resumo de Alta', color: '#2563A8', title: 'Rust et al. (2025) — Communications Medicine',
+    body: `<p>Simplificação de resumos de alta cardiológicos com geração de recomendações de estilo de vida personalizadas.</p><h3>Resultados principais</h3><ul><li>Significativamente mais legível (p&lt;0,0001)</li><li>85% correto em conteúdo clínico</li><li>83% inofensivo na avaliação de segurança</li><li>Recomendações de lifestyle geradas com qualidade elevada mas personalização limitada</li></ul><p class="ref">RUST, P. et al. Communications Medicine, v. 5, n. 1, p. 208, 2025.</p>` },
+  'e-schwieger': { phase: 'Resumo de Alta', color: '#C0392B', title: 'Schwieger et al. (2024) — IJMI',
+    body: `<p>Estudo em psiquiatria — especialidade com documentação de alta complexidade e sensibilidade clínica.</p><h3>Resultados principais</h3><ul><li>Qualidade inferior ao médico: 3,12 vs. 3,78 (p&lt;0,05)</li><li>40% dos resumos LLM com alucinações</li><li>37,5% das alucinações clinicamente relevantes</li><li>Conclusão: uso direto sem revisão inadequado em psiquiatria</li></ul><p class="ref">SCHWIEGER, A. et al. International Journal of Medical Informatics, v. 192, p. 105654, 2024.</p>` },
+  'e-bain': { phase: 'Resumo de Alta', color: '#C0392B', title: 'Bain et al. (2026) — Hospital Pediatrics',
+    body: `<p>Primeira comparação sistemática em pediatria usando o PDQI-9 com 9 subdomínios.</p><h3>Resultados principais</h3><ul><li>Médicos superam LLM em todos os 9 subdomínios do PDQI-9</li><li>Pontuação global: 23,7 (LLM) vs. 27,4 (médico); p&lt;0,001</li><li>Diferenças mais pronunciadas em organização e completude pediátrica</li></ul><p class="ref">BAIN, A. P. et al. Hospital Pediatrics, v. 16, n. 2, p. 175–182, 2026.</p>` },
+  'e-liw': { phase: 'Resumo de Alta', color: '#2A8A62', title: 'Li W et al. (2026) — Scientific Reports',
+    body: `<p>Abordagem de fine-tuning iterativo com DoRA (decomposição de peso) para redução progressiva de alucinações.</p><h3>Resultados principais</h3><ul><li>BERTScore: +6,9% vs. baseline</li><li>ROUGE-L: +69,6% vs. baseline</li><li>Alucinações reduzidas iterativamente a cada ciclo de fine-tuning</li><li>Modelo open-source ajustado supera GPT-4o no domínio específico</li></ul><p class="ref">LI, W. et al. Scientific Reports, v. 16, n. 1, p. 5607, 2026.</p>` },
+  'e-hains': { phase: 'Resumo de Alta', color: '#B86A10', title: 'Hains et al. (2025) — Internal Medicine Journal',
+    body: `<p>Estudo com dados reais de EHR — sem anonimização sintética, usando prontuários de medicina interna real.</p><h3>Resultados principais</h3><ul><li>Llama3 instruct: 19,1/31 · Llama3 70B: 19,2/31 na rubrica de Savvopoulos</li><li>Resumo médico humano: 24,2/31 (p=0,024)</li><li>Ponto mais baixo: inclusão de achados físicos relevantes (0,4/2)</li><li>Conclusão: viável mas ainda inferior ao padrão humano em dados reais</li></ul><p class="ref">HAINS, L. et al. Internal Medicine Journal, v. 55, n. 7, p. 1188–1192, 2025.</p>` },
+  'e-han': { phase: 'Resumo de Alta', color: '#B86A10', title: 'Han et al. (2026) — JMIR AI',
+    body: `<p>Framework de avaliação de dupla perspectiva — médicos e pacientes/pais avaliam o mesmo resumo LLM.</p><h3>Resultados principais</h3><ul><li>Discrepância significativa entre avaliação de médicos e pais</li><li>Médicos priorizam precisão clínica; pais priorizam compreensibilidade e utilidade prática</li><li>Conclusão: avaliação unidimensional é insuficiente — necessidade de perspectiva do receptor</li></ul><p class="ref">HAN, B. et al. JMIR AI, v. 5, p. e85221, 2026.</p>` },
+  't-cot': { phase: 'Técnica', color: '#2563A8', title: 'Prompt Engineering e Chain-of-Thought',
+    body: `<p>Prompts estruturados com instruções explícitas de raciocínio passo a passo (Chain-of-Thought) demonstraram desempenho superior a estratégias one-shot e até a fine-tuning em tarefas clínicas específicas.</p><h3>Estudos de referência</h3><ul><li>Zhang X et al. (2024) — comparação de estratégias em notas clínicas: CoT supera fine-tuning em classificação de estágios de câncer</li><li>Chung et al. (2024) — prompts estruturados para 8 tarefas perioperatórias: F1 mortalidade 0,86</li></ul>` },
+  't-rag': { phase: 'Técnica', color: '#6B4FBB', title: 'RAG — Retrieval-Augmented Generation',
+    body: `<p>Integração de recuperação de informações de corpus biomédico ao processo de geração melhora consistentemente o desempenho em tarefas clínicas que requerem conhecimento específico de domínio.</p><h3>Estudos de referência</h3><ul><li>Jeong et al. (2024) — Self-BioRAG: +7,2% absoluto sobre LLaMA2-7B; +8% sobre RAG convencional no ROUGE-1</li><li>Gu et al. (2025) — GAPrompt + HCoT: +14,81% em avaliação clínica com geração hierárquica</li><li>Liu et al. (2025) — RAG + grafo de conhecimento: acurácia 0,99 em triagem de emergências</li></ul>` },
+  't-ft': { phase: 'Técnica', color: '#2A8A62', title: 'Fine-tuning com dados de domínio clínico',
+    body: `<p>Fine-tuning supervisionado com dados clínicos específicos nivelar modelos open-source ao desempenho de modelos proprietários no domínio-alvo, com custo operacional substancialmente menor.</p><h3>Estudos de referência</h3><ul><li>Li W et al. (2026) — DoRA para resumos de alta: BERTScore +6,9%, ROUGE-L +69,6%</li><li>Harel-Canada et al. (2025) — Llama-DrugDetector-70B: F1 0,917 com apenas 804 exemplos de treino, superando GPT-4o (0,885)</li><li>Zhang G et al. (2024) — MedReview: fine-tuning aproxima Llama-2 do GPT-3.5 zero-shot em 8.161 pares</li></ul>` },
+  't-cert': { phase: 'Técnica', color: '#B86A10', title: 'CeRTS — Certainty Retrieval Token Search',
+    body: `<p>Método de estimação de incerteza para extração de informações clínicas que supera o Sample Consistency (SC) com fração do custo computacional.</p><h3>Resultados principais</h3><ul><li>Custo médio: 1,9 execuções equivalentes vs. 15 do Sample Consistency</li><li>Supera SC em todos os 8 modelos testados</li><li>Aplicado com sucesso em extração de informações clínicas de prontuários</li></ul><p class="ref">SCHIMMELPFENNIG, L. E. et al. Journal of Biomedical Informatics, v. 170, p. 104900, 2025.</p>` },
+};
+
+function openPanel(key) {
+  const d = panels[key]; if (!d) return;
+  document.getElementById('panelPhase').textContent = d.phase;
+  document.getElementById('panelPhase').style.color = d.color;
+  document.getElementById('panelTitle').textContent = d.title;
+  document.getElementById('panelBody').innerHTML = d.body;
+  document.getElementById('panel').classList.add('open');
+}
+function closePanel() { document.getElementById('panel').classList.remove('open'); }
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('ensaio-theme');
+function applyTheme(theme) {
+  document.body.dataset.theme = theme;
+  themeToggle.textContent = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+}
+themeToggle.addEventListener('click', () => {
+  const nextTheme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(nextTheme);
+  localStorage.setItem('ensaio-theme', nextTheme);
+});
+applyTheme(savedTheme || 'dark');
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+</script>
+</body>
+</html>
