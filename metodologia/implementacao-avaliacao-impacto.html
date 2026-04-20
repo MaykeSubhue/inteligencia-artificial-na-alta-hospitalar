@@ -1,0 +1,599 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Implementação e Avaliação de Impacto - Ensaio de Validação</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f8f5ef;--bg2:#fdfcfa;--bg3:#f4efe6;--bg4:#efe7da;--border:#e7e0d6;--text:#1c1917;--muted:#44403c;--dim:#78716c;--accent:#6d4bb8;--accent-soft:rgba(109,75,184,.12);--accent-strong:#56369a;--shadow:rgba(28,25,23,.08)}
+body[data-theme="dark"]{--bg:#0f1117;--bg2:#161b27;--bg3:#1e2535;--bg4:#232c40;--border:#2a3347;--text:#e8eaf0;--muted:#b4bdd0;--dim:#7f8aa3;--accent:#b18aff;--accent-soft:rgba(177,138,255,.14);--accent-strong:#cfb3ff;--shadow:rgba(0,0,0,.24)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"DM Sans",system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .25s,color .25s}
+.page-header{position:relative;padding:28px 140px 24px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:center;gap:20px}
+.page-header-left{display:flex;flex-direction:column;gap:4px;flex:1;align-items:center;text-align:center;max-width:760px}
+.page-header-label{font-size:10px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:8px}
+.page-header-label::before{content:"";width:20px;height:1px;background:var(--accent);display:inline-block}
+.page-header h1{font-family:"Fraunces",serif;font-size:22px;font-weight:400;color:var(--text);line-height:1.3}
+.page-header h1 em{font-style:italic;color:var(--accent)}
+.page-header-sub{font-size:12px;font-weight:300;color:var(--dim)}
+.header-actions{position:absolute;inset:28px 48px auto 48px;min-height:36px}
+.theme-toggle,.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--dim);text-decoration:none;border:1px solid var(--border);background:var(--bg2);padding:7px 14px;border-radius:20px;transition:.18s;font-family:"DM Sans",sans-serif;cursor:pointer}
+.back-btn{position:absolute;left:0;top:0}
+.theme-toggle{position:absolute;right:0;top:0}
+.theme-toggle:hover,.back-btn:hover{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--bg2))}
+.hint{padding:10px 24px;border-bottom:1px solid var(--border);font:500 11px "DM Sans",sans-serif;color:var(--dim);text-align:center;background:var(--bg)}
+.main{max-width:1180px;margin:0 auto;padding:32px 18px 96px}
+.hero{display:grid;gap:22px;margin-bottom:30px}
+.hero-copy{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:28px;box-shadow:0 14px 32px var(--shadow)}
+.eyebrow{font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.hero-title{font-family:"Fraunces",serif;font-size:34px;line-height:1.12;margin-bottom:12px}
+.hero-title em{font-style:italic;color:var(--accent)}
+.hero-copy p{font-size:15px;line-height:1.78;color:var(--muted);max-width:76ch}
+.hero-copy p + p{margin-top:12px}
+.hero-callout{background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 26%,var(--border));border-radius:16px;padding:22px}
+.hero-callout strong{display:block;font-family:"Fraunces",serif;font-size:20px;font-weight:400;color:var(--accent);margin-bottom:10px}
+.hero-callout p{font-size:14px;line-height:1.75;color:var(--muted)}
+.section{margin-top:30px}
+.section-head{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.section-label{font-size:11px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
+.section-line{height:1px;flex:1;background:var(--border)}
+.pipeline-shell{display:grid;gap:14px}
+.pipeline-flow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.flow-step{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 16px;cursor:pointer;transition:.18s;box-shadow:0 10px 24px var(--shadow)}
+.flow-step:hover{transform:translateY(-2px);border-color:var(--accent)}
+.flow-step.active{background:color-mix(in srgb,var(--accent) 14%,var(--bg2));border-color:var(--accent)}
+.step-num{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.step-title{font-size:14px;font-weight:700;margin-bottom:6px;color:var(--text)}
+.step-desc{font-size:12px;line-height:1.6;color:var(--muted)}
+.detail-panel{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 14px 30px var(--shadow)}
+.detail-panel.open{display:block}
+.detail-header{display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--accent) 10%,var(--bg2))}
+.detail-tag{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);padding:6px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--accent) 32%,var(--border));background:var(--bg2)}
+.detail-header h3{font-family:"Fraunces",serif;font-size:22px;font-weight:400}
+.detail-body{padding:22px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.detail-item{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:16px}
+.detail-item.full{grid-column:1/-1}
+.detail-item h4{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.detail-item p,.detail-item ul{font-size:14px;line-height:1.7;color:var(--muted)}
+.detail-item ul{padding-left:18px}
+.detail-item li+li{margin-top:4px}
+.pas-grid,.tpipa-grid,.contrib-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.pas-card,.tpipa-target,.contrib-card,.compare-shell{background:var(--bg2);border:1px solid var(--border);border-radius:18px;box-shadow:0 12px 28px var(--shadow)}
+.pas-card{overflow:hidden}
+.pas-card-header{padding:16px 20px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.pas-card-header.primary{background:color-mix(in srgb,var(--accent) 10%,var(--bg2));color:var(--accent)}
+.pas-card-header.secondary{background:var(--bg3);color:var(--text)}
+.pas-card-body{padding:20px}
+.pas-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.pas-item:last-child{border-bottom:none;padding-bottom:0}
+.pas-level{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:999px;white-space:nowrap;height:max-content}
+.level-1{background:#f7dfe5;color:#8a1f43}
+.level-2{background:#f7ead6;color:#9b5d00}
+.level-3{background:var(--accent-soft);color:var(--accent)}
+.pas-item-text{font-size:13px;line-height:1.65;color:var(--muted)}
+.pas-item-text strong{display:block;color:var(--text);margin-bottom:3px}
+.profiles-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
+.profile-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 12px 28px var(--shadow);transition:border-color .18s,transform .18s;align-self:start}
+.profile-card:hover{transform:translateY(-2px);border-color:var(--accent)}
+.profile-card.expanded{border-color:var(--accent)}
+.profile-toggle{width:100%;border:none;background:none;color:inherit;text-align:left;cursor:pointer;padding:20px;display:flex;align-items:flex-start;gap:14px;font:inherit}
+.profile-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent);font-size:22px;flex-shrink:0}
+.profile-meta{flex:1}
+.profile-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px}
+.profile-cid{font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.profile-chevron{font-size:14px;color:var(--accent);transition:transform .18s}
+.profile-card.expanded .profile-chevron{transform:rotate(180deg)}
+.profile-content{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s ease}
+.profile-card.expanded .profile-content{grid-template-rows:1fr}
+.profile-content-inner{overflow:hidden}
+.profile-body{padding:0 20px 18px;display:grid;gap:10px;border-top:1px solid var(--border);background:var(--bg)}
+.profile-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding-top:14px}
+.profile-row + .profile-row{padding-top:0;border-top:none}
+.profile-row-label{font-size:12px;font-weight:600;color:var(--dim);white-space:nowrap}
+.profile-row-value{font-size:13px;line-height:1.6;color:var(--muted);text-align:right}
+.window-badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.profile-footer{margin-top:6px;padding:14px 16px;border-radius:12px;background:var(--bg3);font-size:12px;line-height:1.7;color:var(--muted)}
+.tpipa-box{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px;align-items:center;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 16%,var(--bg2)),var(--bg2));padding:24px;border:1px solid var(--border);border-radius:18px;box-shadow:0 14px 30px var(--shadow);margin-bottom:16px}
+.tpipa-label{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.tpipa-name{font-family:"Fraunces",serif;font-size:28px;margin-bottom:10px}
+.tpipa-desc{font-size:14px;line-height:1.75;color:var(--muted)}
+.tpipa-formula{font-size:14px;font-weight:600;line-height:1.7;text-align:center;padding:18px 20px;border-radius:16px;background:var(--bg2);border:1px solid color-mix(in srgb,var(--accent) 22%,var(--border));color:var(--accent)}
+.tpipa-target{padding:18px}
+.tpipa-target h4{font-size:15px;font-weight:700;margin-bottom:10px}
+.target-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.target-row:last-child{border-bottom:none}
+.target-label{color:var(--dim)}
+.target-val{color:var(--accent);font-weight:700;text-align:right}
+.compare-shell{overflow:auto}
+.comp-table{width:100%;border-collapse:collapse;min-width:760px}
+.comp-table th{background:var(--text);color:var(--bg2);padding:12px 14px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.comp-table td{padding:13px 14px;border-bottom:1px solid var(--border);font-size:13px;line-height:1.6;color:var(--muted);vertical-align:top}
+.comp-table tr:nth-child(even) td{background:var(--bg)}
+.comp-table td:first-child{font-weight:700;color:var(--text)}
+.pill{display:inline-block;padding:4px 9px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.pill-yes{background:var(--accent-soft);color:var(--accent)}
+.pill-no{background:#f7dfe5;color:#8a1f43}
+.pill-new{background:color-mix(in srgb,var(--accent) 18%,var(--bg2));color:var(--accent)}
+.contrib-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.contrib-card{padding:22px}
+.contrib-num{font-family:"Fraunces",serif;font-size:42px;line-height:1;color:var(--accent);margin-bottom:12px}
+.contrib-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px}
+.contrib-text{font-size:13px;line-height:1.7;color:var(--muted)}
+.contrib-gap{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--bg3);font-size:11px;line-height:1.6;color:var(--dim)}
+.doc-footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:12px;font-size:11px;color:var(--dim)}
+@media (max-width:1100px){.pipeline-flow{grid-template-columns:repeat(3,minmax(0,1fr))}.profiles-grid,.contrib-grid{grid-template-columns:1fr}.tpipa-grid{grid-template-columns:1fr}.pas-grid{grid-template-columns:1fr}.hero-title{font-size:30px}}
+@media (max-width:900px){.page-header{padding:20px 18px;flex-direction:column}.header-actions{position:static;display:flex;align-items:center;justify-content:space-between;width:100%;min-height:0}.back-btn,.theme-toggle{position:static}.main{padding:20px 14px 80px}.pipeline-flow,.detail-body{grid-template-columns:1fr}.tpipa-box{grid-template-columns:1fr}.profiles-grid{grid-template-columns:1fr}}
+@media (max-width:560px){.page-header h1{font-size:18px}.page-header-sub{font-size:11px}.theme-toggle,.back-btn{padding:8px 12px;font-size:11px}.hero-copy,.hero-callout,.detail-item,.tpipa-box,.tpipa-target,.contrib-card,.pas-card-body{padding:18px}.hero-title{font-size:24px}.profile-toggle{padding:18px}.profile-body{padding:0 18px 18px}.profile-row{flex-direction:column}.profile-row-value{text-align:left}.doc-footer{flex-direction:column}}
+</style>
+</head>
+<body data-theme="dark">
+<header class="page-header">
+  <div class="page-header-left">
+    <span class="page-header-label">Dissertação · UNAMA / UFPA · 2026</span>
+    <h1>Inteligência Artificial na <em>Alta Hospitalar</em></h1>
+    <span class="page-header-sub">Daniel Lopes da Mata · Orientadores: Prof. Quites Reis · Profa. Dra. Luciana Ferreira</span>
+  </div>
+  <div class="header-actions">
+    <a class="back-btn" href="./index.html" aria-label="Voltar para metodologia">← Metodologia</a>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema">Light Mode</button>
+  </div>
+</header>
+<div class="hint">Arquitetura de implementação, pacote de alta estruturado e avaliação do impacto assistencial após a alta</div>
+<main class="main">
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow">Metodologia · Implementação e avaliação de impacto</div>
+      <h2 class="hero-title">Resumo de alta como vetor de <em>transição do cuidado</em></h2>
+      <p>Esta etapa representa a implementação e a avaliação de impacto do pipeline desenvolvido nas fases anteriores. O resumo de alta validado pelo médico responsável passa a integrar um Pacote de Alta Estruturado, enviado para a Atenção Primária à Saúde e monitorado por indicadores de tempo de resposta assistencial após a alta.</p>
+      <p>A proposta responde à lacuna identificada na revisão sistemática: os estudos revisados não trataram o resumo de alta como instrumento formal de transição do cuidado entre hospital e APS em sistema universal.</p>
+    </div>
+    <div class="hero-callout">
+      <strong>Lacuna identificada</strong>
+      <p>Dos 44 estudos revisados entre 2023 e 2026, nenhum abordou o resumo de alta como instrumento de transição hospital-APS em sistema universal. No Brasil, também não há indicador sistemático que meça o intervalo entre a alta hospitalar e o primeiro contato assistencial na APS no SUS público.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="section-label">Arquitetura do pipeline</div>
+      <div class="section-line"></div>
+    </div>
+    <div class="pipeline-shell">
+      <div class="pipeline-flow">
+        <button class="flow-step active" type="button" data-panel="alta">
+          <div class="step-num">Passo 01</div>
+          <div class="step-title">Alta Hospitalar</div>
+          <div class="step-desc">Médico valida o resumo gerado pelo LLM antes da alta física.</div>
+        </button>
+        <button class="flow-step" type="button" data-panel="pas">
+          <div class="step-num">Passo 02</div>
+          <div class="step-title">Montagem do PAS</div>
+          <div class="step-desc">Resumo validado e exames clinicamente relevantes compõem o pacote.</div>
+        </button>
+        <button class="flow-step" type="button" data-panel="transmissao">
+          <div class="step-num">Passo 03</div>
+          <div class="step-title">Transmissão</div>
+          <div class="step-desc">API estruturada envia o pacote para a UBS vinculada ao CNS.</div>
+        </button>
+        <button class="flow-step" type="button" data-panel="recepcao">
+          <div class="step-num">Passo 04</div>
+          <div class="step-title">Recepção na APS</div>
+          <div class="step-desc">A UBS recebe notificação e acesso imediato ao pacote.</div>
+        </button>
+        <button class="flow-step" type="button" data-panel="consulta">
+          <div class="step-num">Passo 05</div>
+          <div class="step-title">Primeira Interação</div>
+          <div class="step-desc">Consulta, visita ou vacina registrada marca o primeiro contato na APS.</div>
+        </button>
+        <button class="flow-step" type="button" data-panel="tpipa">
+          <div class="step-num">Passo 06</div>
+          <div class="step-title">Cálculo do TPIPA</div>
+          <div class="step-desc">Linkagem por CNS mede o tempo entre a alta e a primeira interação.</div>
+        </button>
+      </div>
+
+      <article class="detail-panel open" id="panel-alta">
+        <div class="detail-header">
+          <span class="detail-tag">Passo 01</span>
+          <h3>Alta Hospitalar</h3>
+        </div>
+        <div class="detail-body">
+          <div class="detail-item">
+            <h4>O que acontece</h4>
+            <p>O médico assistente revisa o resumo gerado automaticamente nas fases anteriores, corrige o que for necessário e valida o documento antes do registro final no prontuário eletrônico institucional.</p>
+          </div>
+          <div class="detail-item">
+            <h4>Critério de acionamento do PAS</h4>
+            <p>O pacote é transmitido apenas quando o resumo já está validado e o caso se enquadra em um dos perfis clínicos priorizados: pós-cirurgia, pós-parto ou pós-AVC.</p>
+          </div>
+          <div class="detail-item full">
+            <h4>Destino do documento</h4>
+            <p>O resumo validado substitui o antigo resumo de alta. Uma via acompanha o paciente no momento da alta e a outra é transmitida automaticamente para a UBS responsável pelo seguimento longitudinal, integrando o PAS.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="detail-panel" id="panel-pas">
+        <div class="detail-header">
+          <span class="detail-tag">Passo 02</span>
+          <h3>Montagem do PAS</h3>
+        </div>
+        <div class="detail-body">
+          <div class="detail-item">
+            <h4>Componente 1</h4>
+            <p>Resumo validado com campos estruturados sobre motivo da internacao, diagnosticos, evolucao hospitalar, tratamentos, condicao na alta, prescricao e plano de seguimento.</p>
+          </div>
+          <div class="detail-item">
+            <h4>Componente 2</h4>
+            <p>Anexo de exames clinicamente relevantes para o seguimento na APS, selecionados por uma taxonomia de criticidade em tres niveis para reduzir ruido informacional e repeticao desnecessaria.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="detail-panel" id="panel-transmissao">
+        <div class="detail-header">
+          <span class="detail-tag">Passo 03</span>
+          <h3>Transmissão via API</h3>
+        </div>
+        <div class="detail-body">
+          <div class="detail-item">
+            <h4>Arquitetura adotada</h4>
+            <p>Comunicação estruturada ponto a ponto, sem depender de prontuário único. O PAS é transmitido para o prontuário da UBS responsável, identificada pelo cartão SUS do paciente.</p>
+          </div>
+          <div class="detail-item">
+            <h4>Chave de linkagem</h4>
+            <p>Número do Cartão Nacional de Saúde como chave primária. A estratégia é coerente com cruzamentos já realizados pela SMS-RJ em outras rotinas assistenciais e epidemiológicas.</p>
+          </div>
+          <div class="detail-item">
+            <h4>Sistemas envolvidos</h4>
+            <ul>
+              <li>EHR hospitalar como origem.</li>
+              <li>e-SUS PEC ou plataforma da SMS-RJ como destino.</li>
+              <li>SI-PNI para o perfil pós-parto do bebê.</li>
+            </ul>
+          </div>
+          <div class="detail-item">
+            <h4>Momento da transmissão</h4>
+            <p>O envio ocorre no momento em que o resumo é validado pelo médico, antes da alta física, para que a UBS já receba o pacote com antecedência.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="detail-panel" id="panel-recepcao">
+        <div class="detail-header">
+          <span class="detail-tag">Passo 04</span>
+          <h3>Recepção na APS</h3>
+        </div>
+        <div class="detail-body">
+          <div class="detail-item">
+            <h4>O que a UBS recebe</h4>
+            <p>Notificação automática no e-SUS PEC alertando sobre alta prevista ou concluída e acesso imediato ao pacote completo, com resumo e exames selecionados.</p>
+          </div>
+          <div class="detail-item">
+            <h4>Experiência do profissional</h4>
+            <p>Na primeira interação com o paciente, o profissional da APS acessa o PAS diretamente no prontuário, sem depender de busca ativa de informações no hospital.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="detail-panel" id="panel-consulta">
+        <div class="detail-header">
+          <span class="detail-tag">Passo 05</span>
+          <h3>Primeira Interação na APS</h3>
+        </div>
+        <div class="detail-body">
+          <div class="detail-item">
+            <h4>O que é registrado</h4>
+            <p>Data e hora da primeira interacao assistencial apos a alta: consulta presencial, atendimento remoto, visita domiciliar ou primeira vacinacao registrada no SI-PNI para o perfil pós-parto do bebê.</p>
+          </div>
+          <div class="detail-item">
+            <h4>Fontes por perfil</h4>
+            <ul>
+              <li>Pós-cirurgia e pós-AVC: e-SUS PEC.</li>
+              <li>Pós-parto mãe: consulta puerperal no e-SUS PEC.</li>
+              <li>Pós-parto bebê: primeira vacinação registrada no SI-PNI.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="detail-panel" id="panel-tpipa">
+        <div class="detail-header">
+          <span class="detail-tag">Passo 06</span>
+          <h3>Cálculo do TPIPA</h3>
+        </div>
+        <div class="detail-body">
+          <div class="detail-item">
+            <h4>Formula</h4>
+            <p><strong>TPIPA (dias) = data da primeira interação na APS - data da alta hospitalar.</strong> O indicador é calculado por perfil clínico, comparando histórico sem intervenção e grupo com PAS transmitido.</p>
+          </div>
+          <div class="detail-item">
+            <h4>Linkagem deterministica</h4>
+            <p>Os dados hospitalares e os dados da APS são cruzados pelo CNS, permitindo rastreabilidade do ciclo pós-alta com base em sistemas já existentes.</p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="section-label">Pacote de alta estruturado</div>
+      <div class="section-line"></div>
+    </div>
+    <div class="pas-grid">
+      <article class="pas-card">
+        <div class="pas-card-header primary">Taxonomia de exames</div>
+        <div class="pas-card-body">
+          <div class="pas-item">
+            <span class="pas-level level-1">Nivel 1</span>
+            <div class="pas-item-text">
+              <strong>Incluir obrigatoriamente</strong>
+              Resultados que alteram a conduta na APS ou implicam seguimento específico, como ecocardiograma com FE reduzida, cultura com germe resistente, sorologia positiva ou biópsia com diagnóstico oncológico.
+            </div>
+          </div>
+          <div class="pas-item">
+            <span class="pas-level level-2">Nivel 2</span>
+            <div class="pas-item-text">
+              <strong>Incluir se alterado</strong>
+              Resultados fora da referência e com relevância para o seguimento, como função renal alterada, anemia grave, glicemia elevada ou coagulopatia.
+            </div>
+          </div>
+          <div class="pas-item">
+            <span class="pas-level level-3">Nivel 3</span>
+            <div class="pas-item-text">
+              <strong>Não incluir de rotina</strong>
+              Resultados normais ou sem impacto prático no seguimento pela APS, como hemogramas de controle, eletrólitos estáveis e gasometrias seriadas.
+            </div>
+          </div>
+        </div>
+      </article>
+      <article class="pas-card">
+        <div class="pas-card-header secondary">Objetivo e impacto esperado</div>
+        <div class="pas-card-body">
+          <p class="pas-item-text"><strong>Para o profissional da APS</strong> a selecao reduz ruido e concentra apenas o que e clinicamente relevante para o seguimento.</p>
+          <br>
+          <p class="pas-item-text"><strong>Para o sistema</strong> a taxonomia ajuda a evitar repeticao desnecessaria de exames ja realizados na internacao, reduzindo custo, espera e sobrecarga laboratorial.</p>
+          <br>
+          <p class="pas-item-text">Essa organização dos exames como anexo estruturado aparece aqui como contribuição original, ausente no corpus da revisão sistemática.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="section-label">Perfis clínicos</div>
+      <div class="section-line"></div>
+    </div>
+    <div class="profiles-grid">
+      <article class="profile-card">
+        <button class="profile-toggle" type="button">
+          <div class="profile-icon">🔬</div>
+          <div class="profile-meta">
+            <div class="profile-title">Pós-Cirurgia</div>
+            <div class="profile-cid">Z48 · T81 · K91</div>
+          </div>
+          <span class="profile-chevron">⌄</span>
+        </button>
+        <div class="profile-content">
+          <div class="profile-content-inner">
+            <div class="profile-body">
+              <div class="profile-row"><span class="profile-row-label">Janela crítica</span><span class="profile-row-value"><span class="window-badge">14 dias</span></span></div>
+              <div class="profile-row"><span class="profile-row-label">TPIPA primário</span><span class="profile-row-value">Tempo até a primeira consulta na APS após a alta.</span></div>
+              <div class="profile-row"><span class="profile-row-label">Indicadores secundários</span><span class="profile-row-value">Retorno ao pronto-socorro em 30 dias e necessidade de revisão cirúrgica na janela.</span></div>
+              <div class="profile-row"><span class="profile-row-label">Risco principal</span><span class="profile-row-value">Infecção de sítio cirúrgico, deiscência e complicações anestésicas tardias.</span></div>
+              <div class="profile-row"><span class="profile-row-label">Norma brasileira</span><span class="profile-row-value">Não formalizada. Consenso internacional costuma trabalhar com 7 a 14 dias.</span></div>
+              <div class="profile-row"><span class="profile-row-label">Fonte TPIPA</span><span class="profile-row-value">e-SUS PEC com registro de consulta.</span></div>
+              <div class="profile-footer">O profissional da APS precisa receber procedimento realizado, prescrição de alta, cuidados com a ferida e condições de retorno. Essas informações frequentemente não estão completas nos resumos convencionais.</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="profile-card">
+        <button class="profile-toggle" type="button">
+          <div class="profile-icon">🤱</div>
+          <div class="profile-meta">
+            <div class="profile-title">Pós-Parto</div>
+            <div class="profile-cid">Z39 · O85 · O86</div>
+          </div>
+          <span class="profile-chevron">⌄</span>
+        </button>
+        <div class="profile-content">
+          <div class="profile-content-inner">
+            <div class="profile-body">
+              <div class="profile-row"><span class="profile-row-label">Janela crítica mae</span><span class="profile-row-value"><span class="window-badge">7 a 10 dias</span></span></div>
+              <div class="profile-row"><span class="profile-row-label">Janela crítica bebe</span><span class="profile-row-value"><span class="window-badge">30 dias</span></span></div>
+              <div class="profile-row"><span class="profile-row-label">TPIPA mãe</span><span class="profile-row-value">Tempo até consulta puerperal na APS.</span></div>
+              <div class="profile-row"><span class="profile-row-label">TPIPA bebê</span><span class="profile-row-value">Tempo até a primeira vacinação registrada na UBS.</span></div>
+              <div class="profile-row"><span class="profile-row-label">Indicadores secundários</span><span class="profile-row-value">Consulta puerperal em 10 dias e completude vacinal BCG e HepB em 30 dias.</span></div>
+              <div class="profile-row"><span class="profile-row-label">Norma brasileira</span><span class="profile-row-value">Existe referência parcial no cuidado puerperal e no monitoramento da atenção primária.</span></div>
+              <div class="profile-row"><span class="profile-row-label">Fontes TPIPA</span><span class="profile-row-value">e-SUS PEC para mãe e SI-PNI para o bebê.</span></div>
+              <div class="profile-footer">A vacinação do bebê é um marco assistencial com registro obrigatório e data rastreável. Isso torna o seguimento pós-parto adequado para avaliação do impacto do pacote enviado à APS.</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="profile-card">
+        <button class="profile-toggle" type="button">
+          <div class="profile-icon">🧠</div>
+          <div class="profile-meta">
+            <div class="profile-title">Pós-AVC</div>
+            <div class="profile-cid">I63 · I64 · G81</div>
+          </div>
+          <span class="profile-chevron">⌄</span>
+        </button>
+        <div class="profile-content">
+          <div class="profile-content-inner">
+            <div class="profile-body">
+              <div class="profile-row"><span class="profile-row-label">Janela crítica</span><span class="profile-row-value"><span class="window-badge">21 dias</span></span></div>
+              <div class="profile-row"><span class="profile-row-label">TPIPA primário</span><span class="profile-row-value">Tempo até a primeira consulta na APS após a alta.</span></div>
+              <div class="profile-row"><span class="profile-row-label">Indicadores secundários</span><span class="profile-row-value">Início de reabilitação em 15 dias e reinternação em 30 dias.</span></div>
+              <div class="profile-row"><span class="profile-row-label">Média sem intervenção</span><span class="profile-row-value">27 dias em referência internacional usada como baseline externo.</span></div>
+              <div class="profile-row"><span class="profile-row-label">Meta com intervenção</span><span class="profile-row-value">TPIPA de até 14 dias como hipótese operacional.</span></div>
+              <div class="profile-row"><span class="profile-row-label">Fonte TPIPA</span><span class="profile-row-value">e-SUS PEC com registro de consulta.</span></div>
+              <div class="profile-footer">O controle precoce dos fatores de risco após AVC depende do acesso rápido da APS às informações da internação. Sem o PAS, o atraso pós-alta amplia o risco de recorrência e perda de janela terapêutica.</div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="section-label">Indicador central</div>
+      <div class="section-line"></div>
+    </div>
+    <div class="tpipa-box">
+      <div>
+        <div class="tpipa-label">Indicador proposto</div>
+        <div class="tpipa-name">TPIPA</div>
+        <div class="tpipa-desc">Tempo de Primeira Interação Pós-Alta. Mede o intervalo entre a alta hospitalar e o primeiro registro assistencial na APS. A proposta é usar sistemas já existentes para produzir uma medida rastreável de continuidade do cuidado no SUS público.</div>
+      </div>
+      <div class="tpipa-formula">TPIPA (dias)<br>= data da 1ª interação APS<br>- data da alta hospitalar</div>
+    </div>
+    <div class="tpipa-grid">
+      <article class="tpipa-target">
+        <h4>Pós-Cirurgia</h4>
+        <div class="target-row"><span class="target-label">Meta TPIPA</span><span class="target-val">≤ 7 dias</span></div>
+        <div class="target-row"><span class="target-label">Janela</span><span class="target-val">14 dias</span></div>
+        <div class="target-row"><span class="target-label">Fonte</span><span class="target-val">e-SUS PEC</span></div>
+        <div class="target-row"><span class="target-label">Norma BR</span><span class="target-val">ausente</span></div>
+      </article>
+      <article class="tpipa-target">
+        <h4>Pós-Parto</h4>
+        <div class="target-row"><span class="target-label">Meta mãe</span><span class="target-val">≤ 10 dias</span></div>
+        <div class="target-row"><span class="target-label">Meta bebê</span><span class="target-val">≤ 30 dias</span></div>
+        <div class="target-row"><span class="target-label">Fontes</span><span class="target-val">e-SUS PEC / SI-PNI</span></div>
+        <div class="target-row"><span class="target-label">Norma BR</span><span class="target-val">parcial</span></div>
+      </article>
+      <article class="tpipa-target">
+        <h4>Pós-AVC</h4>
+        <div class="target-row"><span class="target-label">Meta TPIPA</span><span class="target-val">≤ 14 dias</span></div>
+        <div class="target-row"><span class="target-label">Janela</span><span class="target-val">21 dias</span></div>
+        <div class="target-row"><span class="target-label">Fonte</span><span class="target-val">e-SUS PEC</span></div>
+        <div class="target-row"><span class="target-label">Baseline externo</span><span class="target-val">27 dias</span></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="section-label">Posicionamento do indicador</div>
+      <div class="section-line"></div>
+    </div>
+    <div class="compare-shell">
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th>Indicador</th>
+            <th>Sistema</th>
+            <th>Cobertura SUS</th>
+            <th>Vinculação ao evento hospitalar</th>
+            <th>Limitação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Reinternação 30 dias</td>
+            <td>ANS / TISS</td>
+            <td><span class="pill pill-no">Saúde suplementar</span></td>
+            <td>Sim, mas mede retorno ao hospital</td>
+            <td>Exclui o SUS público e mede falha tardia, não a transição.</td>
+          </tr>
+          <tr>
+            <td>Cuidado puerperal</td>
+            <td>e-SUS PEC</td>
+            <td><span class="pill pill-yes">SUS nacional</span></td>
+            <td><span class="pill pill-no">Não</span></td>
+            <td>Não diferencia pacientes oriundas de alta hospitalar.</td>
+          </tr>
+          <tr>
+            <td>Vacinação inicial do bebê</td>
+            <td>SI-PNI</td>
+            <td><span class="pill pill-yes">SUS nacional</span></td>
+            <td><span class="pill pill-no">Não</span></td>
+            <td>Existe como evento, mas não é vinculado ao resumo de alta.</td>
+          </tr>
+          <tr>
+            <td>TPIPA</td>
+            <td>EHR + e-SUS PEC + SI-PNI</td>
+            <td><span class="pill pill-yes">SUS / SMS-RJ</span></td>
+            <td><span class="pill pill-new">Sim</span></td>
+            <td>Requer linkagem entre sistemas e se aplica a rede estudada.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div class="section-label">Contribuição original</div>
+      <div class="section-line"></div>
+    </div>
+    <div class="contrib-grid">
+      <article class="contrib-card">
+        <div class="contrib-num">01</div>
+        <div class="contrib-title">Indicador inédito no SUS</div>
+        <div class="contrib-text">O TPIPA propõe medir sistematicamente o intervalo entre a alta hospitalar e o primeiro contato assistencial na APS com base em perfis clínicos específicos.</div>
+        <div class="contrib-gap">Lacuna coberta: o SUS público não mede hoje esse tempo de forma estruturada.</div>
+      </article>
+      <article class="contrib-card">
+        <div class="contrib-num">02</div>
+        <div class="contrib-title">Resumo de alta como instrumento de transição</div>
+        <div class="contrib-text">O resumo deixa de ser apenas documento de encerramento da internação e passa a atuar como mecanismo ativo de comunicação clínica entre hospital e APS.</div>
+        <div class="contrib-gap">Lacuna coberta: o corpus revisado não abordou essa função do resumo de alta.</div>
+      </article>
+      <article class="contrib-card">
+        <div class="contrib-num">03</div>
+        <div class="contrib-title">Exames como anexo estruturado</div>
+        <div class="contrib-text">A taxonomia de criticidade organiza quais exames devem acompanhar o resumo validado, com potencial impacto direto em custo, tempo e continuidade do cuidado.</div>
+        <div class="contrib-gap">Lacuna coberta: a prática não apareceu entre os estudos revisados.</div>
+      </article>
+    </div>
+  </section>
+
+  <div class="doc-footer">
+    <div>Implementação e Avaliação de Impacto · Dissertação UNAMA / UFPA · 2026</div>
+    <div>TPIPA · PAS · SMS-RJ · SUS</div>
+  </div>
+</main>
+<script>
+const themeToggle=document.getElementById("themeToggle");
+const savedTheme=localStorage.getItem("ensaio-theme");
+function applyTheme(theme){document.body.dataset.theme=theme;themeToggle.textContent=theme==="dark"?"Light Mode":"Dark Mode";}
+themeToggle.addEventListener("click",()=>{const nextTheme=document.body.dataset.theme==="dark"?"light":"dark";applyTheme(nextTheme);localStorage.setItem("ensaio-theme",nextTheme);});
+applyTheme(savedTheme||"dark");
+
+const flowSteps=[...document.querySelectorAll(".flow-step")];
+const panels=[...document.querySelectorAll(".detail-panel")];
+flowSteps.forEach((step)=>{
+  step.addEventListener("click",()=>{
+    const target=step.dataset.panel;
+    flowSteps.forEach((item)=>item.classList.remove("active"));
+    panels.forEach((panel)=>panel.classList.remove("open"));
+    step.classList.add("active");
+    const selected=document.getElementById(`panel-${target}`);
+    if(selected){selected.classList.add("open");selected.scrollIntoView({behavior:"smooth",block:"nearest"});}
+  });
+});
+
+const profileCards=[...document.querySelectorAll(".profile-card")];
+profileCards.forEach((card)=>{
+  const toggle=card.querySelector(".profile-toggle");
+  toggle.addEventListener("click",()=>{
+    const willOpen=!card.classList.contains("expanded");
+    profileCards.forEach((item)=>item.classList.remove("expanded"));
+    if(willOpen){card.classList.add("expanded");}
+  });
+});
+</script>
+</body>
+</html>
+
+

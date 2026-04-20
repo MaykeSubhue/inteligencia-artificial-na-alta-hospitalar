@@ -86,18 +86,23 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .prisma-arrow-down { text-align: center; padding: 2px 0; color: var(--ink3); font-size: 16px; margin-left: 60px; }
 .prisma-excl { border-radius: 8px; border: 1.5px solid var(--c5b); background: var(--c5); padding: 12px 16px; flex: 1; }
 .prisma-excl .etitle { font-size: 12px; font-weight: 500; color: var(--c5t); margin-bottom: 6px; }
-.prisma-excl .eline { font-size: 11px; color: var(--ink3); font-weight: 300; padding: 2px 0; }
+.prisma-excl .eline { font-size: 11px; color: color-mix(in srgb, var(--c5t) 72%, var(--ink)); font-weight: 300; padding: 2px 0; }
 
 .pb-ident  { background: var(--c1); border-color: var(--c1b); min-width: 160px; }
-.pb-triag  { background: #EDF4E0; border-color: var(--c3b); min-width: 160px; }
+.pb-triag  { background: var(--c3); border-color: var(--c3b); min-width: 160px; }
 .pb-eleg   { background: var(--c4); border-color: var(--c4b); min-width: 160px; }
-.pb-incl   { background: #F0EBF8; border-color: var(--c2b); min-width: 160px; }
+.pb-incl   { background: var(--c2); border-color: var(--c2b); min-width: 160px; }
 .pb-remov  { background: var(--c5); border-color: var(--c5b); min-width: 160px; }
+.pb-ident .bnum, .pb-ident .blabel, .pb-ident .bsub { color: var(--c1t); }
+.pb-triag .bnum, .pb-triag .blabel, .pb-triag .bsub { color: var(--c3t); }
+.pb-eleg .bnum, .pb-eleg .blabel, .pb-eleg .bsub { color: var(--c4t); }
+.pb-incl .bnum, .pb-incl .blabel, .pb-incl .bsub { color: var(--c2t); }
+.pb-remov .bnum, .pb-remov .blabel, .pb-remov .bsub { color: var(--c5t); }
 
 .phase-ident { background: var(--c1); color: var(--c1t); }
-.phase-triag { background: #EDF4E0; color: var(--c3t); }
+.phase-triag { background: var(--c3); color: var(--c3t); }
 .phase-eleg  { background: var(--c4); color: var(--c4t); }
-.phase-incl  { background: #F0EBF8; color: var(--c2t); }
+.phase-incl  { background: var(--c2); color: var(--c2t); }
 .prisma-phase-tag { border-radius: 4px; padding: 6px 10px; font-size: 10px; }
 
 /* ── GRID CARDS ── */
@@ -131,7 +136,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 /* ── LACUNAS ── */
 .gap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .gap-card { background: var(--white); border: 1.5px solid var(--rule); border-radius: 12px; padding: 18px; }
-.gap-card.highlight { border-color: var(--c2b); background: #F5F2FD; }
+.gap-card.highlight { border-color: var(--c2b); background: color-mix(in srgb, var(--c2) 74%, var(--white)); }
 .gap-icon { font-size: 22px; margin-bottom: 8px; }
 .gap-title { font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--ink); }
 .gap-desc { font-size: 12px; color: var(--ink3); font-weight: 300; line-height: 1.6; }
@@ -140,6 +145,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 /* ── RELEVÂNCIA ── */
 .rel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .rel-card { background: var(--white); border: 1.5px solid var(--rule); border-radius: 12px; padding: 20px; }
+.rel-card.highlight { border-color: var(--c2b); background: color-mix(in srgb, var(--c2) 74%, var(--white)); }
+.rel-card.highlight .rel-title { color: var(--ink); }
+.rel-card.highlight .rel-desc { color: color-mix(in srgb, var(--ink2) 88%, var(--c2t)); }
 .rel-num { font-family: 'Fraunces', serif; font-size: 32px; font-weight: 300; color: var(--c2b); line-height: 1; margin-bottom: 8px; }
 .rel-title { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
 .rel-desc { font-size: 12px; color: var(--ink3); font-weight: 300; line-height: 1.6; }
@@ -511,12 +519,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
       <div class="rel-title">Pipeline de processamento documentado</div>
       <div class="rel-desc">Abordagem de limpeza, filtragem por relevância clínica e organização cronológica das evoluções com redução média de 65% do volume textual — metodologicamente original e reprodutível.</div>
     </div>
-    <div class="rel-card" style="border-color:var(--c2b);background:#F5F2FD">
+    <div class="rel-card highlight">
       <div class="rel-num" style="color:var(--c2b)">03</div>
       <div class="rel-title">Resumo de alta como instrumento de transição</div>
       <div class="rel-desc">Abordagem inédita — nenhum dos 44 estudos posicionou o resumo de alta como vetor de comunicação clínica entre hospital e APS em sistema hierarquizado por níveis de complexidade.</div>
     </div>
-    <div class="rel-card" style="border-color:var(--c2b);background:#F5F2FD">
+    <div class="rel-card highlight">
       <div class="rel-num" style="color:var(--c2b)">04</div>
       <div class="rel-title">Exames complementares como anexo estruturado</div>
       <div class="rel-desc">Inclusão dos principais exames da internação como anexo ao resumo de alta — potencial impacto em redução de custos, atrasos no tratamento e segurança do paciente. Não investigado por nenhum estudo.</div>

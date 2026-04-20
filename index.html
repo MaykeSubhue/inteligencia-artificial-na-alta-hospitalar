@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ensaio de Validacao - Menu Principal</title>
+<title>Ensaio de Validação - Menu Principal</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Fraunces:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f8f5ef;--bg2:#fdfcfa;--bg3:#f4efe6;--border:#e7e0d6;--text:#1c1917;--muted:#44403c;--dim:#78716c;--accent:#6d4bb8;--shadow:rgba(28,25,23,.08)}body[data-theme="dark"]{--bg:#0f1117;--bg2:#161b27;--bg3:#1e2535;--border:#2a3347;--text:#e8eaf0;--muted:#b4bdd0;--dim:#7f8aa3;--accent:#b18aff;--shadow:rgba(0,0,0,.24)}*{box-sizing:border-box;margin:0;padding:0}body{font-family:"DM Sans",system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .25s,color .25s}.page-header{padding:28px 48px 24px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:space-between;gap:20px}.page-header-left{display:flex;flex-direction:column;gap:4px;flex:1;align-items:center;text-align:center}.page-header-label{font-size:10px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:8px}.page-header-label::before{content:"";width:20px;height:1px;background:var(--accent);display:inline-block}.page-header h1{font-family:"Fraunces",serif;font-size:22px;font-weight:400;color:var(--text);line-height:1.3}.page-header h1 em{font-style:italic;color:var(--accent)}.page-header-sub{font-size:12px;font-weight:300;color:var(--dim)}.header-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}.theme-toggle,.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--dim);text-decoration:none;border:1px solid var(--border);background:var(--bg2);padding:7px 14px;border-radius:20px;transition:.18s;font-family:"DM Sans",sans-serif;cursor:pointer}.theme-toggle:hover,.back-btn:hover{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--bg2))}.hint{padding:10px 24px;border-bottom:1px solid var(--border);font:500 11px "DM Sans",sans-serif;color:var(--dim);text-align:center;background:var(--bg)}.main{padding:32px 18px 96px}.cards{max-width:920px;margin:0 auto;display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.card{display:block;text-decoration:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;color:var(--text);transition:.18s;min-height:150px;box-shadow:0 10px 24px var(--shadow)}.card:hover{transform:translateY(-2px);border-color:var(--accent)}.card-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}.card-title{font-family:"Fraunces",serif;font-size:24px;font-weight:400;line-height:1.15;margin-bottom:10px}.card-desc{font-size:14px;line-height:1.65;color:var(--muted);max-width:42ch}@media (max-width:900px){.page-header{padding:20px 18px;flex-direction:column}.header-actions{width:100%;justify-content:flex-end}.main{padding:20px 14px 80px}.cards{grid-template-columns:1fr}}@media (max-width:560px){.page-header h1{font-size:18px}.page-header-sub{font-size:11px}.theme-toggle,.back-btn{padding:8px 12px;font-size:11px}.card{padding:16px;min-height:132px}.card-title{font-size:20px}.card-desc{font-size:13px}}
@@ -12,36 +12,36 @@
 <body data-theme="dark">
 <header class="page-header">
   <div class="page-header-left">
-    <span class="page-header-label">Dissertacao · UNAMA / UFPA · 2026</span>
-    <h1>Inteligencia Artificial na <em>Alta Hospitalar</em></h1>
+    <span class="page-header-label">Dissertação · UNAMA / UFPA · 2026</span>
+    <h1>Inteligência Artificial na <em>Alta Hospitalar</em></h1>
     <span class="page-header-sub">Daniel Lopes da Mata · Orientadores: Prof. Quites Reis · Profa. Dra. Luciana Ferreira</span>
   </div>
   <div class="header-actions">
     <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema">Light Mode</button>
   </div>
 </header>
-<div class="hint">Escolha uma secao para acessar o conteudo do projeto</div>
+<div class="hint">Escolha uma seção para acessar o conteúdo do projeto</div>
 <main class="main">
   <section class="cards">
     <a class="card" href="introducao/index.html">
-      <div class="card-label">Secao 1</div>
-      <div class="card-title">Introducao</div>
-      <div class="card-desc">Espaco reservado para o contexto inicial do projeto. Nesta fase, a pagina abrira como placeholder.</div>
+      <div class="card-label">Seção 1</div>
+      <div class="card-title">Introdução</div>
+      <div class="card-desc">Acesso ao conteúdo introdutório do projeto, incluindo a revisão sistemática sobre LLMs na geração de resumos de alta hospitalar.</div>
     </a>
     <a class="card" href="metodologia/index.html">
-      <div class="card-label">Secao 2</div>
+      <div class="card-label">Seção 2</div>
       <div class="card-title">Metodologia</div>
-      <div class="card-desc">Acesso aos dois conteudos metodologicos ja existentes: framework metodologico e ensaio - visao geral.</div>
+      <div class="card-desc">Acesso aos três conteúdos metodológicos: framework metodológico, ensaio - visão geral e implementação e avaliação de impacto.</div>
     </a>
     <a class="card" href="resultado/index.html">
-      <div class="card-label">Secao 3</div>
+      <div class="card-label">Seção 3</div>
       <div class="card-title">Resultado</div>
-      <div class="card-desc">Espaco reservado para apresentar os resultados do estudo. Nesta fase, a pagina abrira como placeholder.</div>
+      <div class="card-desc">Espaço reservado para apresentar os resultados do estudo. Nesta fase, a página permanece como placeholder.</div>
     </a>
     <a class="card" href="conclusao/index.html">
-      <div class="card-label">Secao 4</div>
-      <div class="card-title">Conclusao</div>
-      <div class="card-desc">Espaco reservado para a conclusao final do projeto. Nesta fase, a pagina abrira como placeholder.</div>
+      <div class="card-label">Seção 4</div>
+      <div class="card-title">Conclusão</div>
+      <div class="card-desc">Espaço reservado para a conclusão final do projeto. Nesta fase, a página permanece como placeholder.</div>
     </a>
   </section>
 </main>
